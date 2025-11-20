@@ -48,7 +48,7 @@ export const Input = ({ value, onChange, onKeyDown, placeholder, type = "text", 
       onKeyDown={onKeyDown}
       placeholder={placeholder}
       autoFocus={autoFocus}
-      className={`w-full bg-slate-50 hover:bg-slate-100 focus:bg-white border border-slate-200 rounded-xl py-3 ${Icon ? 'pl-11' : 'pl-4'} pr-4 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all ${className}`}
+      className={`w-full bg-slate-50 hover:bg-slate-100 focus:bg-white border border-slate-200 rounded-xl py-3 ${Icon ? 'pl-11' : 'pl-4'} pr-4 text-base font-medium text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all ${className}`}
     />
   </div>
 );
@@ -123,7 +123,7 @@ export const AutoSaveTextarea = ({ value, onSave, disabled, placeholder }) => {
         value={localValue}
         onChange={(e) => setLocalValue(e.target.value)}
         onBlur={handleBlur}
-        className="w-full p-4 bg-slate-50 hover:bg-slate-100 focus:bg-white border border-slate-200 rounded-2xl text-sm min-h-[120px] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-slate-900 placeholder:text-slate-400 resize-none leading-relaxed"
+        className="w-full p-4 bg-slate-50 hover:bg-slate-100 focus:bg-white border border-slate-200 rounded-2xl text-base min-h-[120px] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-slate-900 placeholder:text-slate-400 resize-none leading-relaxed"
         placeholder={placeholder}
       />
       {isSaving && (
