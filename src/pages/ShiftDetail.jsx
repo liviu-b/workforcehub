@@ -1,52 +1,145 @@
 import React from 'react';
-import { ChevronRight, Clock, Download, Trash2, TrendingUp, Users, Package, Plus, X, CheckCircle, AlertCircle } from 'lucide-react';
+import { ChevronRight, Clock, Download, Trash2, TrendingUp, Users, Package, Plus, X, CheckCircle } from 'lucide-react';
 import { Card, Button, AutoSaveTextarea } from '../components/UI';
 import { formatDate, generatePDF } from '../utils/helpers';
 import { supabase } from '../lib/supabaseClient';
 import { APP_ID } from '../constants';
 
 export default function ShiftDetailView({ shift, activeShiftId, setView, requestDelete, employees, materials, updateShiftLocally, showToast, user, userName, fetchData }) {
+  // Dacă nu există date, nu randăm nimic sau putem pune un loader
   if (!shift) return null;
+
   const isApproved = shift.status === 'approved';
 
-  // ... (Existing Logic: updateShift, toggleEmployee, addMaterial, approveShift stay the same)
-  // Assuming the logic functions are the same as provided in your upload, just rewriting render:
+  // --- FUNCȚII DE UPDATE (Logica de bază) ---
 
   const updateShift = async (field, value) => {
-      const partial = { [field]: value };
-      updateShiftLocally(activeShiftId, partial);
-      await supabase.from('shifts').update(partial).match({ id: activeShiftId, app_id: APP_ID });
-  };
-  const toggleEmployee = async (empId) => {
-      const currentIds = shift.assignedEmployeeIds || [];
-      const currentHours = shift.employeeHours || {};
-      let newIds = currentIds.includes(empId) ? currentIds.filter(id => id !== empId) : [...currentIds, empId];
-      let newHours = { ...currentHours };
-      if (!currentIds.includes(empId)) newHours[empId] = 8; else delete newHours[empId];
-      const partial = { assignedEmployeeIds: newIds, employeeHours: newHours };
-      updateShiftLocally(activeShiftId, partial);
-      await supabase.from('shifts').update(partial).match({ id: activeShiftId, app_id: APP_ID });
-  };
-  const addMaterial = async (matId, qty) => {
-      if(!matId || qty <= 0) return;
-      const current = shift.materialUsage || [];
-      const idx = current.findIndex(m => m.materialId === matId);
-      const updated = [...current];
-      if(idx >= 0) updated[idx].quantity = Number(updated[idx].quantity) + Number(qty);
-      else updated.push({ materialId: matId, quantity: Number(qty) });
-      updateShiftLocally(activeShiftId, { materialUsage: updated });
-      await supabase.from('shifts').update({ materialUsage: updated }).match({ id: activeShiftId, app_id: APP_ID });
-  };
-  const approveShift = async () => {
-      const partial = { status: 'approved', approvedAt: new Date().toISOString(), approvedBy: user.id, approvedByName: userName };
-      updateShiftLocally(activeShiftId, partial);
-      await supabase.from('shifts').update(partial).match({ id: activeShiftId, app_id: APP_ID });
+    const partial = { [field]: value };
+    updateShiftLocally(activeShiftId, partial);
+    const { error } = await supabase
+      .from('shifts')
+      .update(partial)
+      .match({ id: activeShiftId, app_id: APP_ID });
+    if (error) {
+      console.error(error);
+      showToast('Eroare la salvare', 'error');
+      fetchData();
+    }
   };
 
+  const toggleEmployee = async (empId) => {
+    const currentIds = shift.assignedEmployeeIds || [];
+    const currentHours = shift.employeeHours || {};
+    let newIds = [...currentIds];
+    let newHours = { ...currentHours };
+    
+    if (currentIds.includes(empId)) {
+      newIds = newIds.filter(id => id !== empId);
+      delete newHours[empId];
+    } else {
+      newIds.push(empId);
+      newHours[empId] = 8; // Default 8 ore
+    }
+
+    const partial = { assignedEmployeeIds: newIds, employeeHours: newHours };
+    updateShiftLocally(activeShiftId, partial);
+    const { error } = await supabase
+      .from('shifts')
+      .update(partial)
+      .match({ id: activeShiftId, app_id: APP_ID });
+    if (error) {
+      console.error(error);
+      showToast('Eroare la salvare', 'error');
+      fetchData();
+    }
+  };
+
+  const addMaterial = async (matId, qty) => {
+    if (!matId || qty <= 0) return;
+    const current = shift.materialUsage || [];
+    const idx = current.findIndex(m => m.materialId === matId);
+    const updated = [...current];
+    
+    if (idx >= 0) {
+        updated[idx].quantity = Number(updated[idx].quantity) + Number(qty);
+    } else {
+        updated.push({ materialId: matId, quantity: Number(qty) });
+    }
+
+    const partial = { materialUsage: updated };
+    updateShiftLocally(activeShiftId, partial);
+    const { error } = await supabase
+      .from('shifts')
+      .update(partial)
+      .match({ id: activeShiftId, app_id: APP_ID });
+    
+    if (error) {
+      console.error(error);
+      showToast('Eroare la salvare', 'error');
+      fetchData();
+    } else {
+      showToast('Material adăugat');
+    }
+  };
+
+  // --- FUNCȚIA DE APROBARE + NOTIFICARE EMAIL ---
+  const approveShift = async () => {
+    const nowIso = new Date().toISOString();
+    
+    // 1. Actualizăm local starea (UI Optimistic)
+    const partial = {
+      status: 'approved',
+      approvedAt: nowIso,
+      approvedBy: user.id,
+      approvedByName: userName
+    };
+
+    // Actualizăm UI-ul imediat
+    updateShiftLocally(activeShiftId, partial);
+
+    try {
+      // 2. Actualizăm baza de date
+      const { error } = await supabase
+        .from('shifts')
+        .update(partial)
+        .match({ id: activeShiftId, app_id: APP_ID });
+
+      if (error) throw error;
+
+      showToast('Raport aprobat cu succes!');
+
+      // 3. TRIMITEM NOTIFICAREA EMAIL (Aici apelăm funcția din cloud)
+      console.log('Se trimite notificarea...');
+      
+      const { error: funcError } = await supabase.functions.invoke('send-shift-notification', {
+        body: {
+          shiftTitle: shift.jobTitle,
+          approvedBy: userName,
+          date: new Date(shift.date).toLocaleDateString('ro-RO'),
+          
+          // ⚠️ IMPORTANT: Schimbă adresa de mai jos cu adresa reală a administratorului sau a clientului
+          recipientEmail: 'liviu.bancila95@gmail.com' 
+        }
+      });
+
+      if (funcError) {
+        console.error('Eroare la trimiterea emailului:', funcError);
+      } else {
+        console.log('Email trimis cu succes!');
+      }
+
+    } catch (error) {
+      console.error(error);
+      showToast('Eroare la aprobare', 'error');
+      fetchData(); // Revenim la starea serverului dacă a eșuat
+    }
+  };
+
+  // --- RENDER (UI NOU) ---
   return (
     <div className="pb-32 animate-in slide-in-from-right-5 duration-300">
-      {/* Navbar */}
-      <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-lg border-b border-slate-100 px-4 py-3 -mx-6 mb-6 flex items-center justify-between">
+      {/* Navbar / Header */}
+      <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-lg border-b border-slate-100 px-4 py-3 -mx-6 mb-6 flex items-center justify-between shadow-sm">
          <div className="flex items-center gap-2">
            <button onClick={() => setView('dashboard')} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500">
              <ChevronRight className="rotate-180" size={22} />
@@ -76,7 +169,7 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
         )}
 
         {/* Progress Section */}
-        <Card className={isApproved && 'opacity-60 pointer-events-none'}>
+        <Card className={isApproved ? 'opacity-60 pointer-events-none' : ''}>
           <div className="flex justify-between items-center mb-4">
              <h3 className="font-bold text-slate-900 flex items-center gap-2 text-sm">
                <div className="bg-indigo-100 p-1.5 rounded-lg text-indigo-600"><TrendingUp size={16}/></div> Progres
@@ -92,7 +185,7 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
         </Card>
 
         {/* Team Section */}
-        <Card className={isApproved && 'opacity-60 pointer-events-none'}>
+        <Card className={isApproved ? 'opacity-60 pointer-events-none' : ''}>
           <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2 text-sm">
             <div className="bg-blue-100 p-1.5 rounded-lg text-blue-600"><Users size={16}/></div> Echipă
           </h3>
@@ -139,7 +232,7 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
         </Card>
 
         {/* Materials Section */}
-        <Card className={isApproved && 'opacity-60 pointer-events-none'}>
+        <Card className={isApproved ? 'opacity-60 pointer-events-none' : ''}>
            <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2 text-sm">
             <div className="bg-emerald-100 p-1.5 rounded-lg text-emerald-600"><Package size={16}/></div> Materiale
           </h3>
@@ -180,13 +273,13 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
         </Card>
 
         {/* Notes */}
-        <Card className={isApproved && 'opacity-60 pointer-events-none'}>
+        <Card className={isApproved ? 'opacity-60 pointer-events-none' : ''}>
           <h3 className="font-bold text-slate-900 mb-2 text-sm">Note & Observații</h3>
           <AutoSaveTextarea 
             disabled={isApproved}
             value={shift.notes}
             onSave={(val) => updateShift('notes', val)}
-            placeholder="..."
+            placeholder="Scrie aici observații, probleme întâmpinate sau starea vremii..."
           />
         </Card>
       </div>
