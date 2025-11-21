@@ -184,37 +184,61 @@ export default function App() {
   if (!user) return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500 font-medium">Se conectează...</div>;
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900">
+    <div className="min-h-screen bg-[#f8fafc] font-sans text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
       <Toast message={toast.message} type={toast.type} onClose={() => setToast({message:'', type:''})} />
       <ConfirmModal isOpen={confirmData.isOpen} message={confirmData.message} onConfirm={confirmData.action} onCancel={() => setConfirmData({ isOpen: false, message: '', action: null })} />
       
-      <div className="max-w-lg mx-auto min-h-screen relative bg-white shadow-2xl shadow-slate-200/50 sm:border-x sm:border-slate-100">
-        <div className="p-6">
-          {view === 'dashboard' && 
+      <div className="max-w-md mx-auto min-h-screen relative bg-[#f8fafc] sm:bg-white shadow-2xl shadow-slate-200/50 sm:border-x sm:border-slate-100 pb-safe">
+        <div className="px-6 py-4">
+          {view === 'dashboard' && (
             <Dashboard 
-              shifts={shifts} user={user} userName={userName} setUserName={setUserName} 
-              setActiveShiftId={setActiveShiftId} setView={setView} requestDelete={requestDelete} 
-              handleCreateShift={handleCreateShift} jobs={jobs} showToast={showToast}
-            />}
-          
-          {view === 'manage' && 
+               user={user} 
+               shifts={shifts} 
+               jobs={jobs} 
+               userName={userName}
+               setUserName={setUserName} // Asigură-te că Dashboard primește aceste props-uri
+               setActiveShiftId={setActiveShiftId} 
+               setView={setView}
+               requestDelete={requestDelete}
+               handleCreateShift={handleCreateShift}
+            />
+          )}
+          {view === 'manage' && (
             <ManageView 
-              employees={employees} jobs={jobs} materials={materials}
-              setEmployees={setEmployees} setJobs={setJobs} setMaterials={setMaterials}
-              showToast={showToast} requestDelete={requestDelete}
-            />}
-          
-          {view === 'shifts' && 
-            <ReportsView shifts={shifts} setActiveShiftId={setActiveShiftId} setView={setView} />}
-          
-          {view === 'shift-detail' && 
-            <ShiftDetailView 
-              shift={shifts.find(s => s.id === activeShiftId)} 
-              activeShiftId={activeShiftId} setView={setView} requestDelete={requestDelete}
-              employees={employees} materials={materials} updateShiftLocally={updateShiftLocally}
-              showToast={showToast} user={user} userName={userName} fetchData={fetchData}
-            />}
+               appId={appId} // Dacă ManageView folosește appId din props
+               employees={employees} setEmployees={setEmployees}
+               jobs={jobs} setJobs={setJobs}
+               materials={materials} setMaterials={setMaterials}
+               requestDelete={requestDelete}
+               showToast={showToast}
+            />
+          )}
+          {view === 'shifts' && (
+             <ReportsView 
+                shifts={shifts} 
+                setActiveShiftId={setActiveShiftId} 
+                setView={setView} 
+             />
+          )}
+          {view === 'shift-detail' && (
+             <ShiftDetailView 
+                shiftId={activeShiftId}
+                shifts={shifts}
+                employees={employees}
+                materials={materials}
+                user={user}
+                userName={userName}
+                setView={setView}
+                setShifts={setShifts}
+                appId={appId}
+                showToast={showToast}
+                requestDelete={requestDelete}
+                fetchData={fetchData} // Dacă ai nevoie de refresh
+             />
+          )}
         </div>
+        
+        {/* MobileNav apare doar dacă NU ești în detalii */}
         {view !== 'shift-detail' && <MobileNav currentView={view} setView={setView} />}
       </div>
     </div>
