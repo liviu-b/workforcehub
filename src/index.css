@@ -3,7 +3,16 @@
 @tailwind utilities;
 
 body {
-  @apply bg-slate-50;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
-    "Helvetica Neue", Arial, sans-serif;
+  @apply bg-gray-50 text-slate-600;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; /* Suggesting a modern font */
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Hide scrollbar for clean horizontal scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
