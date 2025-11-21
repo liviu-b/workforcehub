@@ -118,7 +118,7 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
           date: new Date(shift.date).toLocaleDateString('ro-RO'),
           
           // ⚠️ IMPORTANT: Schimbă adresa de mai jos cu adresa reală a administratorului sau a clientului
-          recipientEmail: 'liviu.bancila95@gmail.com' 
+          recipientEmail: 'email' 
         }
       });
 
