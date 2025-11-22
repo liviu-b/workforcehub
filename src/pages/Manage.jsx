@@ -13,6 +13,7 @@ const EmployeeEditModal = ({ employee, shifts, onClose, onSave, onDelete }) => {
     hire_date: employee.hire_date || ''
   });
 
+
   // Calculam statistici (Ore lucrate pe luni)
   const stats = useMemo(() => {
     const history = {};
