@@ -32,7 +32,7 @@ const WelcomeScreen = ({ onFinished }) => {
           <Zap size={48} className="text-white fill-white" />
         </div>
         <h1 className="text-4xl font-black tracking-tighter mb-2 drop-shadow-lg">Bun venit!</h1>
-        <p className="text-indigo-100 font-medium text-lg opacity-90">Workforce Hub</p>
+        <p className="text-indigo-100 font-medium text-lg opacity-90">WorkforceHub</p>
       </div>
       
       <div className="absolute bottom-8 text-center">
