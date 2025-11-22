@@ -77,6 +77,7 @@ export default function Dashboard({ shifts, user, userName, setUserName, setActi
           </div>
         </Card>
       </div>
+      <p className="text-center text-[10px] text-slate-300 pt-6">Power by ACL-Smart Software</p>
 
       {/* Active Activity */}
       <section>
@@ -117,6 +118,7 @@ export default function Dashboard({ shifts, user, userName, setUserName, setActi
           </div>
         )}
       </section>
+      <p className="text-center text-[10px] text-slate-300 pt-6">Power by ACL-Smart Software</p>
 
       {/* Quick Actions */}
       <section>
@@ -139,6 +141,7 @@ export default function Dashboard({ shifts, user, userName, setUserName, setActi
            ))}
         </div>
       </section>
+      <p className="text-center text-[10px] text-slate-300 pt-6">Power by ACL-Smart Software</p>
     </div>
   );
 }

@@ -240,6 +240,7 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
         </div>
         {employees.length === 0 && <div className="text-center p-4 text-slate-400 text-sm italic">Adaugă membrii echipei.</div>}
       </section>
+      <p className="text-center text-[10px] text-slate-300 pt-6">Power by ACL-Smart Software</p>
 
       {/* Sectiune Lucrari */}
       <section>
@@ -280,6 +281,7 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
           ))}
         </div>
       </section>
+      <p className="text-center text-[10px] text-slate-300 pt-6">Power by ACL-Smart Software</p>
 
       {/* Sectiune Materiale (Ramane neschimbata la design, dar folosim stilul nou) */}
       <section>
@@ -311,6 +313,7 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
           ))}
         </div>
       </section>
+      <p className="text-center text-[10px] text-slate-300 pt-6">Power by ACL-Smart Software</p>
 
       {/* MODALE */}
       {selectedEmployee && (
