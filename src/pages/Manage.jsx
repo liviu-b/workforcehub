@@ -311,6 +311,7 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
           ))}
         </div>
       </section>
+      <p className="text-center text-[10px] text-slate-300 pt-6">Power by ACL-Smart Software</p>
 
       {/* MODALE */}
       {selectedEmployee && (
