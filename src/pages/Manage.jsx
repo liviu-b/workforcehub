@@ -1,19 +1,6 @@
+
 import React, { useState, useMemo } from 'react';
-import {
-  Users,
-  MapPin,
-  Package,
-  Plus,
-  Settings,
-  Trash2,
-  Phone,
-  Calendar,
-  User,
-  Clock,
-  X,
-  Save,
-  Briefcase
-} from 'lucide-react';
+import { Users, MapPin, Package, Plus, Settings, Trash2, Phone, Calendar, User, Clock, X, Save, Briefcase } from 'lucide-react';
 import { Card, Input, Button } from '../components/UI';
 import { CONSTRUCTION_UNITS, APP_ID } from '../constants';
 import { supabase } from '../lib/supabaseClient';
@@ -26,20 +13,15 @@ const EmployeeEditModal = ({ employee, shifts, onClose, onSave, onDelete }) => {
     hire_date: employee.hire_date || ''
   });
 
+
   // Calculam statistici (Ore lucrate pe luni)
   const stats = useMemo(() => {
     const history = {};
     shifts.forEach(shift => {
       if (shift.employeeHours && shift.employeeHours[employee.id]) {
-        const date = new Date(
-          shift.date?.seconds ? shift.date.seconds * 1000 : shift.date
-        );
-        const monthKey = date.toLocaleDateString('ro-RO', {
-          year: 'numeric',
-          month: 'long'
-        });
-        history[monthKey] =
-          (history[monthKey] || 0) + parseFloat(shift.employeeHours[employee.id]);
+        const date = new Date(shift.date?.seconds ? shift.date.seconds * 1000 : shift.date);
+        const monthKey = date.toLocaleDateString('ro-RO', { year: 'numeric', month: 'long' });
+        history[monthKey] = (history[monthKey] || 0) + parseFloat(shift.employeeHours[employee.id]);
       }
     });
     return history;
@@ -53,98 +35,46 @@ const EmployeeEditModal = ({ employee, shifts, onClose, onSave, onDelete }) => {
             <h3 className="text-2xl font-bold">{formData.name}</h3>
             <p className="text-indigo-200 text-sm">Detalii & Istoric</p>
           </div>
-          <button
-            onClick={onClose}
-            className="bg-white/20 p-2 rounded-full hover:bg-white/30 transition"
-          >
-            <X size={20} />
-          </button>
+          <button onClick={onClose} className="bg-white/20 p-2 rounded-full hover:bg-white/30 transition"><X size={20} /></button>
         </div>
-
+        
         <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
           {/* Formular Editare */}
           <div className="space-y-3">
-            <div>
-              <label className="text-xs font-bold text-slate-500 uppercase ml-1">
-                Nume Complet
-              </label>
-              <Input
-                value={formData.name}
-                onChange={e =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                icon={User}
-              />
-            </div>
-            <div>
-              <label className="text-xs font-bold text-slate-500 uppercase ml-1">
-                Telefon
-              </label>
-              <Input
-                value={formData.phone}
-                onChange={e =>
-                  setFormData({ ...formData, phone: e.target.value })
-                }
-                placeholder="07xx..."
-                icon={Phone}
-              />
-            </div>
-            <div>
-              <label className="text-xs font-bold text-slate-500 uppercase ml-1">
-                Data Angajării
-              </label>
-              <Input
-                type="date"
-                value={formData.hire_date}
-                onChange={e =>
-                  setFormData({ ...formData, hire_date: e.target.value })
-                }
-                icon={Calendar}
-              />
-            </div>
+             <div>
+                <label className="text-xs font-bold text-slate-500 uppercase ml-1">Nume Complet</label>
+                <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} icon={User} />
+             </div>
+             <div>
+                <label className="text-xs font-bold text-slate-500 uppercase ml-1">Telefon</label>
+                <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="07xx..." icon={Phone} />
+             </div>
+             <div>
+                <label className="text-xs font-bold text-slate-500 uppercase ml-1">Data Angajării</label>
+                <Input type="date" value={formData.hire_date} onChange={e => setFormData({...formData, hire_date: e.target.value})} icon={Calendar} />
+             </div>
           </div>
 
           {/* Istoric Ore */}
           <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-            <h4 className="font-bold text-slate-700 mb-3 flex items-center gap-2">
-              <Clock size={16} className="text-indigo-500" /> Istoric Activitate
-            </h4>
-            {Object.keys(stats).length === 0 ? (
-              <p className="text-sm text-slate-400 italic">
-                Nicio activitate înregistrată.
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {Object.entries(stats).map(([month, hours]) => (
-                  <div
-                    key={month}
-                    className="flex justify-between text-sm border-b border-slate-200 pb-1 last:border-0"
-                  >
-                    <span className="capitalize text-slate-600">{month}</span>
-                    <span className="font-bold text-indigo-600">
-                      {hours} ore
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
+             <h4 className="font-bold text-slate-700 mb-3 flex items-center gap-2"><Clock size={16} className="text-indigo-500"/> Istoric Activitate</h4>
+             {Object.keys(stats).length === 0 ? (
+               <p className="text-sm text-slate-400 italic">Nicio activitate înregistrată.</p>
+             ) : (
+               <div className="space-y-2">
+                 {Object.entries(stats).map(([month, hours]) => (
+                   <div key={month} className="flex justify-between text-sm border-b border-slate-200 pb-1 last:border-0">
+                     <span className="capitalize text-slate-600">{month}</span>
+                     <span className="font-bold text-indigo-600">{hours} ore</span>
+                   </div>
+                 ))}
+               </div>
+             )}
           </div>
 
           <div className="flex gap-3 pt-2">
-            <Button
-              variant="ghost"
-              onClick={() => onDelete(employee.id)}
-              className="text-rose-500 bg-rose-50 hover:bg-rose-100 flex-1"
-            >
-              Șterge
-            </Button>
-            <Button
-              onClick={() => onSave(employee.id, formData)}
-              icon={Save}
-              className="flex-[2] bg-indigo-600"
-            >
-              Salvează
-            </Button>
+            <Button variant="ghost" onClick={() => onDelete(employee.id)} className="text-rose-500 bg-rose-50 hover:bg-rose-100 flex-1">Șterge</Button>
+            <Button onClick={() => onSave(employee.id, formData)} icon={Save} className="flex-[2] bg-indigo-600">Salvează</Button>
           </div>
         </div>
       </div>
@@ -169,98 +99,34 @@ const JobEditModal = ({ job, onClose, onSave, onDelete }) => {
             <h3 className="text-2xl font-bold">Editare Lucrare</h3>
             <p className="text-orange-100 text-sm">{formData.title}</p>
           </div>
-          <button
-            onClick={onClose}
-            className="bg-white/20 p-2 rounded-full hover:bg-white/30 transition"
-          >
-            <X size={20} />
-          </button>
+          <button onClick={onClose} className="bg-white/20 p-2 rounded-full hover:bg-white/30 transition"><X size={20} /></button>
         </div>
-
+        
         <div className="p-6 space-y-4">
           <div className="space-y-3">
-            <div>
-              <label className="text-xs font-bold text-slate-500 uppercase ml-1">
-                Nume Lucrare
-              </label>
-              <Input
-                value={formData.title}
-                onChange={e =>
-                  setFormData({ ...formData, title: e.target.value })
-                }
-                icon={Briefcase}
-              />
-            </div>
-            <div>
-              <label className="text-xs font-bold text-slate-500 uppercase ml-1">
-                Locație
-              </label>
-              <Input
-                value={formData.location}
-                onChange={e =>
-                  setFormData({ ...formData, location: e.target.value })
-                }
-                placeholder="Adresa..."
-                icon={MapPin}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-bold text-slate-500 uppercase ml-1">
-                  Data Început
-                </label>
-                {/* input de dată custom, fără componenta Input */}
-                <div className="relative mt-1">
-                  <Calendar
-                    size={16}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-                  />
-                  <input
-                    type="date"
-                    value={formData.start_date}
-                    onChange={e =>
-                      setFormData({
-                        ...formData,
-                        start_date: e.target.value
-                      })
-                    }
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 pl-10 pr-3 py-3 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-500 uppercase ml-1">
-                  Responsabil
-                </label>
-                <Input
-                  value={formData.manager}
-                  onChange={e =>
-                    setFormData({ ...formData, manager: e.target.value })
-                  }
-                  placeholder="Nume..."
-                  icon={User}
-                />
-              </div>
-            </div>
+             <div>
+                <label className="text-xs font-bold text-slate-500 uppercase ml-1">Nume Lucrare</label>
+                <Input value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} icon={Briefcase} />
+             </div>
+             <div>
+                <label className="text-xs font-bold text-slate-500 uppercase ml-1">Locație</label>
+                <Input value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} placeholder="Adresa..." icon={MapPin} />
+             </div>
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+               <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase ml-1">Data Început</label>
+                  <Input type="date" value={formData.start_date} onChange={e => setFormData({...formData, start_date: e.target.value})} />
+               </div>
+               <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase ml-1">Responsabil</label>
+                  <Input value={formData.manager} onChange={e => setFormData({...formData, manager: e.target.value})} placeholder="Nume..." icon={User} />
+               </div>
+             </div>
           </div>
 
           <div className="flex gap-3 pt-4">
-            <Button
-              variant="ghost"
-              onClick={() => onDelete(job.id)}
-              className="text-rose-500 bg-rose-50 hover:bg-rose-100 flex-1"
-            >
-              Șterge
-            </Button>
-            <Button
-              onClick={() => onSave(job.id, formData)}
-              icon={Save}
-              className="flex-[2] bg-orange-500 hover:bg-orange-600 border-orange-500 shadow-orange-200"
-            >
-              Salvează
-            </Button>
+            <Button variant="ghost" onClick={() => onDelete(job.id)} className="text-rose-500 bg-rose-50 hover:bg-rose-100 flex-1">Șterge</Button>
+            <Button onClick={() => onSave(job.id, formData)} icon={Save} className="flex-[2] bg-orange-500 hover:bg-orange-600 border-orange-500 shadow-orange-200">Salvează</Button>
           </div>
         </div>
       </div>
@@ -269,17 +135,7 @@ const JobEditModal = ({ job, onClose, onSave, onDelete }) => {
 };
 
 // --- PAGINA PRINCIPALA MANAGE ---
-export default function ManageView({
-  employees,
-  jobs,
-  materials,
-  setEmployees,
-  setJobs,
-  setMaterials,
-  showToast,
-  requestDelete,
-  shifts = []
-}) {
+export default function ManageView({ employees, jobs, materials, setEmployees, setJobs, setMaterials, showToast, requestDelete, shifts = [] }) {
   const [newEmp, setNewEmp] = useState('');
   const [newJob, setNewJob] = useState('');
   const [newMat, setNewMat] = useState('');
@@ -304,8 +160,7 @@ export default function ManageView({
       resetFn('');
       if (tableName === 'employees') setEmployees(prev => [...prev, inserted]);
       if (tableName === 'jobs') setJobs(prev => [...prev, inserted]);
-      if (tableName === 'materials')
-        setMaterials(prev => [...prev, inserted]);
+      if (tableName === 'materials') setMaterials(prev => [...prev, inserted]);
     } catch (e) {
       console.error(e);
       showToast('Eroare', 'error');
@@ -322,9 +177,7 @@ export default function ManageView({
 
       if (error) throw error;
 
-      stateSetter(prev =>
-        prev.map(item => (item.id === id ? { ...item, ...updates } : item))
-      );
+      stateSetter(prev => prev.map(item => item.id === id ? { ...item, ...updates } : item));
       showToast('Actualizat cu succes!');
       setSelectedEmployee(null);
       setSelectedJob(null);
@@ -339,7 +192,8 @@ export default function ManageView({
       {/* Header */}
       <div className="flex justify-between items-end px-1">
         <div>
-          <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-wider mb-1"></div>
+          <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">
+          </div>
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
             Setări <span className="text-indigo-600">Proiect</span>
           </h1>
@@ -355,51 +209,37 @@ export default function ManageView({
           <Users size={20} className="text-indigo-500" /> Echipă
         </h2>
         <div className="flex gap-2 mb-4">
-          <Input
-            value={newEmp}
+          <Input 
+            value={newEmp} 
             onChange={e => setNewEmp(e.target.value)}
-            onKeyDown={e =>
-              e.key === 'Enter' &&
-              addData('employees', { name: newEmp }, setNewEmp)
-            }
-            placeholder="Nume nou..."
+            onKeyDown={e => e.key === 'Enter' && addData('employees', { name: newEmp }, setNewEmp)}
+            placeholder="Nume nou..." 
             className="flex-1"
           />
-          <Button
-            size="icon"
-            onClick={() =>
-              addData('employees', { name: newEmp }, setNewEmp)
-            }
-            icon={Plus}
-            className="bg-indigo-600 rounded-xl"
-          />
+          <Button size="icon" onClick={() => addData('employees', { name: newEmp }, setNewEmp)} icon={Plus} className="bg-indigo-600 rounded-xl"/>
         </div>
-
+        
         <div className="grid grid-cols-2 gap-3">
           {employees.map(e => (
-            <div
-              key={e.id}
+            <div 
+              key={e.id} 
               onClick={() => setSelectedEmployee(e)}
               className="group bg-white border border-slate-100 p-3 rounded-2xl shadow-sm hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer relative overflow-hidden"
             >
               <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-50 rounded-bl-full -mr-8 -mt-8 transition-colors group-hover:bg-indigo-100"></div>
               <div className="relative z-10">
                 <div className="h-10 w-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-lg mb-2">
-                  {e.name.charAt(0)}
+                   {e.name.charAt(0)}
                 </div>
                 <p className="font-bold text-slate-800 truncate">{e.name}</p>
                 <p className="text-xs text-slate-400 font-medium truncate mt-0.5">
-                  {e.phone || 'Fără telefon'}
+                   {e.phone || 'Fără telefon'}
                 </p>
               </div>
             </div>
           ))}
         </div>
-        {employees.length === 0 && (
-          <div className="text-center p-4 text-slate-400 text-sm italic">
-            Adaugă membrii echipei.
-          </div>
-        )}
+        {employees.length === 0 && <div className="text-center p-4 text-slate-400 text-sm italic">Adaugă membrii echipei.</div>}
       </section>
 
       {/* Sectiune Lucrari */}
@@ -408,30 +248,20 @@ export default function ManageView({
           <MapPin size={20} className="text-indigo-500" /> Lucrări Active
         </h2>
         <div className="flex gap-2 mb-4">
-          <Input
-            value={newJob}
+          <Input 
+            value={newJob} 
             onChange={e => setNewJob(e.target.value)}
-            onKeyDown={e =>
-              e.key === 'Enter' &&
-              addData('jobs', { title: newJob }, setNewJob)
-            }
-            placeholder="Lucrare nouă..."
+            onKeyDown={e => e.key === 'Enter' && addData('jobs', { title: newJob }, setNewJob)}
+            placeholder="Lucrare nouă..." 
             className="flex-1"
           />
-          <Button
-            size="icon"
-            onClick={() =>
-              addData('jobs', { title: newJob }, setNewJob)
-            }
-            icon={Plus}
-            className="bg-indigo-600 rounded-xl"
-          />
+          <Button size="icon" onClick={() => addData('jobs', { title: newJob }, setNewJob)} icon={Plus} className="bg-indigo-600 rounded-xl"/>
         </div>
 
         <div className="space-y-2">
           {jobs.map(j => (
-            <div
-              key={j.id}
+            <div 
+              key={j.id} 
               onClick={() => setSelectedJob(j)}
               className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-md hover:border-orange-300 transition-all cursor-pointer group"
             >
@@ -440,20 +270,10 @@ export default function ManageView({
                   <MapPin size={20} />
                 </div>
                 <div className="min-w-0">
-                  <p className="font-bold text-slate-800 truncate">
-                    {j.title}
-                  </p>
+                  <p className="font-bold text-slate-800 truncate">{j.title}</p>
                   <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
-                    {j.location ? (
-                      <span>{j.location}</span>
-                    ) : (
-                      <span className="italic">Fără locație</span>
-                    )}
-                    {j.manager && (
-                      <span className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 font-medium">
-                        Resp: {j.manager}
-                      </span>
-                    )}
+                    {j.location ? <span>{j.location}</span> : <span className="italic">Fără locație</span>}
+                    {j.manager && <span className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 font-medium">Resp: {j.manager}</span>}
                   </div>
                 </div>
               </div>
@@ -462,114 +282,55 @@ export default function ManageView({
         </div>
       </section>
 
-      {/* Sectiune Materiale */}
+      {/* Sectiune Materiale (Ramane neschimbata la design, dar folosim stilul nou) */}
       <section>
         <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-3 px-1">
           <Package size={20} className="text-indigo-500" /> Catalog Materiale
         </h2>
         <div className="flex gap-2 mb-4">
-          <Input
-            value={newMat}
-            onChange={e => setNewMat(e.target.value)}
-            onKeyDown={e =>
-              e.key === 'Enter' &&
-              addData(
-                'materials',
-                { name: newMat, unit },
-                setNewMat
-              )
-            }
-            placeholder="Material..."
-            className="flex-[2]"
-          />
-          <select
-            value={unit}
-            onChange={e => setUnit(e.target.value)}
-            className="flex-1 bg-white border border-slate-200 rounded-xl px-2 text-sm font-bold text-slate-600 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-          >
-            {CONSTRUCTION_UNITS.map(u => (
-              <option key={u.value} value={u.value}>
-                {u.label}
-              </option>
-            ))}
-          </select>
-          <Button
-            size="icon"
-            onClick={() =>
-              addData(
-                'materials',
-                { name: newMat, unit },
-                setNewMat
-              )
-            }
-            icon={Plus}
-            className="bg-indigo-600 rounded-xl"
-          />
+           <Input 
+             value={newMat} 
+             onChange={e => setNewMat(e.target.value)}
+             onKeyDown={e => e.key === 'Enter' && addData('materials', { name: newMat, unit }, setNewMat)}
+             placeholder="Material..." 
+             className="flex-[2]"
+           />
+           <select 
+             value={unit} onChange={e => setUnit(e.target.value)}
+             className="flex-1 bg-white border border-slate-200 rounded-xl px-2 text-sm font-bold text-slate-600 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+           >
+             {CONSTRUCTION_UNITS.map(u => <option key={u.value} value={u.value}>{u.label}</option>)}
+           </select>
+           <Button size="icon" onClick={() => addData('materials', { name: newMat, unit }, setNewMat)} icon={Plus} className="bg-indigo-600 rounded-xl"/>
         </div>
         <div className="flex flex-wrap gap-2">
           {materials.map(m => (
-            <div
-              key={m.id}
-              className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold border border-emerald-100"
-            >
-              <span>
-                {m.name} ({m.unit})
-              </span>
-              <button
-                onClick={() =>
-                  requestDelete(
-                    'materials',
-                    m.id,
-                    `Ștergi ${m.name}?`
-                  )
-                }
-                className="hover:text-red-500 p-1"
-              >
-                <Trash2 size={12} />
-              </button>
+            <div key={m.id} className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold border border-emerald-100">
+              <span>{m.name} ({m.unit})</span>
+              <button onClick={() => requestDelete('materials', m.id, `Ștergi ${m.name}?`)} className="hover:text-red-500 p-1"><Trash2 size={12} /></button>
             </div>
           ))}
         </div>
       </section>
-      <p className="text-center text-[10px] text-slate-300 pt-6">
-        Power by ACL-Smart Software
-      </p>
+      <p className="text-center text-[10px] text-slate-300 pt-6">Power by ACL-Smart Software</p>
 
       {/* MODALE */}
       {selectedEmployee && (
-        <EmployeeEditModal
+        <EmployeeEditModal 
           employee={selectedEmployee}
           shifts={shifts}
           onClose={() => setSelectedEmployee(null)}
-          onSave={(id, data) =>
-            updateData('employees', id, data, setEmployees)
-          }
-          onDelete={id => {
-            requestDelete(
-              'employees',
-              id,
-              `Ștergi ${selectedEmployee.name}?`
-            );
-            setSelectedEmployee(null);
-          }}
+          onSave={(id, data) => updateData('employees', id, data, setEmployees)}
+          onDelete={(id) => { requestDelete('employees', id, `Ștergi ${selectedEmployee.name}?`); setSelectedEmployee(null); }}
         />
       )}
 
       {selectedJob && (
-        <JobEditModal
+        <JobEditModal 
           job={selectedJob}
           onClose={() => setSelectedJob(null)}
-          onSave={(id, data) =>
-            updateData('jobs', id, data, setJobs)
-          }
-          onDelete={id => {
-            requestDelete(
-              'jobs',
-              id,
-              `Ștergi ${selectedJob.title}?`
-            );
-            setSelectedJob(null);
-          }}
+          onSave={(id, data) => updateData('jobs', id, data, setJobs)}
+          onDelete={(id) => { requestDelete('jobs', id, `Ștergi ${selectedJob.title}?`); setSelectedJob(null); }}
         />
       )}
     </div>
