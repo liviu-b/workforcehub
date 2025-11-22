@@ -131,11 +131,10 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
     } catch (error) {
       console.error(error);
       showToast('Eroare la aprobare', 'error');
-      fetchData(); // Revenim la starea serverului dacă a eșuat
+      fetchData(); 
     }
   };
 
-  // --- RENDER (UI NOU) ---
   return (
     <div className="pb-32 animate-in slide-in-from-right-5 duration-300">
       {/* Navbar / Header */}
