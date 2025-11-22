@@ -43,7 +43,6 @@ export default function ReportsView({ shifts, setActiveShiftId, setView }) {
            </Card>
         ))}
       </div>
-      <p className="text-center text-[10px] text-slate-300 pt-6">Power by ACL-Smart Software</p>
     </div>
   );
 }

@@ -282,7 +282,6 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
             placeholder="Scrie aici observații, probleme întâmpinate sau starea vremii..."
           />
         </Card>
-        <p className="text-center text-[10px] text-slate-300 pt-6">Power by ACL-Smart Software</p>
       </div>
 
       {/* Footer Button */}
