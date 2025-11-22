@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Users, MapPin, Package, Plus, Settings, Trash2, Phone, Calendar, User, Clock, X, Save, Briefcase } from 'lucide-react';
 import { Card, Input, Button } from '../components/UI';
@@ -12,7 +11,6 @@ const EmployeeEditModal = ({ employee, shifts, onClose, onSave, onDelete }) => {
     phone: employee.phone || '',
     hire_date: employee.hire_date || ''
   });
-
 
   // Calculam statistici (Ore lucrate pe luni)
   const stats = useMemo(() => {
@@ -115,7 +113,16 @@ const JobEditModal = ({ job, onClose, onSave, onDelete }) => {
              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                <div>
                   <label className="text-xs font-bold text-slate-500 uppercase ml-1">Data Început</label>
-                  <Input type="date" value={formData.start_date} onChange={e => setFormData({...formData, start_date: e.target.value})} />
+                  {/* 🟧 Wrapper cu border + icon ca să forțăm marginea vizibilă */}
+                  <div className="mt-1 bg-white border border-slate-200 rounded-2xl px-3 py-2 shadow-sm flex items-center gap-2">
+                    <Calendar size={16} className="text-slate-400" />
+                    <Input
+                      type="date"
+                      value={formData.start_date}
+                      onChange={e => setFormData({ ...formData, start_date: e.target.value })}
+                      className="flex-1 border-none shadow-none bg-transparent p-0 focus:ring-0 focus:outline-none"
+                    />
+                  </div>
                </div>
                <div>
                   <label className="text-xs font-bold text-slate-500 uppercase ml-1">Responsabil</label>
@@ -282,7 +289,7 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
         </div>
       </section>
 
-      {/* Sectiune Materiale (Ramane neschimbata la design, dar folosim stilul nou) */}
+      {/* Sectiune Materiale */}
       <section>
         <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-3 px-1">
           <Package size={20} className="text-indigo-500" /> Catalog Materiale
@@ -305,7 +312,7 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
         </div>
         <div className="flex flex-wrap gap-2">
           {materials.map(m => (
-            <div key={m.id} className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold border border-emerald-100">
+            <div key={m.id} className="flex itemswner-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold border border-emerald-100">
               <span>{m.name} ({m.unit})</span>
               <button onClick={() => requestDelete('materials', m.id, `Ștergi ${m.name}?`)} className="hover:text-red-500 p-1"><Trash2 size={12} /></button>
             </div>
