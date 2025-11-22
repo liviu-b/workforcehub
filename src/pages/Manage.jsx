@@ -112,7 +112,7 @@ const JobEditModal = ({ job, onClose, onSave, onDelete }) => {
                 <label className="text-xs font-bold text-slate-500 uppercase ml-1">Locație</label>
                 <Input value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} placeholder="Adresa..." icon={MapPin} />
              </div>
-             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                <div>
                   <label className="text-xs font-bold text-slate-500 uppercase ml-1">Data Început</label>
                   <Input type="date" value={formData.start_date} onChange={e => setFormData({...formData, start_date: e.target.value})} />
