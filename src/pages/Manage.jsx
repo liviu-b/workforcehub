@@ -31,6 +31,10 @@ const EmployeeEditModal = ({ employee, shifts, onClose, onSave, onDelete }) => {
       <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-slide-up">
         <div className="p-6 bg-indigo-600 text-white flex justify-between items-start">
           <div>
+            <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">
+            <Calendar size={14} />
+             Administrare
+          </div>
             <h3 className="text-2xl font-bold">{formData.name}</h3>
             <p className="text-indigo-200 text-sm">Detalii & Istoric</p>
           </div>
