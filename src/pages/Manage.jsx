@@ -83,6 +83,7 @@ const EmployeeEditModal = ({ employee, shifts, onClose, onSave, onDelete }) => {
 };
 
 // --- COMPONENTA EDITARE LUCRARE ---
+// --- COMPONENTA EDITARE LUCRARE ---
 const JobEditModal = ({ job, onClose, onSave, onDelete }) => {
   const [formData, setFormData] = useState({
     title: job.title || '',
@@ -99,7 +100,9 @@ const JobEditModal = ({ job, onClose, onSave, onDelete }) => {
             <h3 className="text-2xl font-bold">Editare Lucrare</h3>
             <p className="text-orange-100 text-sm">{formData.title}</p>
           </div>
-          <button onClick={onClose} className="bg-white/20 p-2 rounded-full hover:bg-white/30 transition"><X size={20} /></button>
+          <button onClick={onClose} className="bg-white/20 p-2 rounded-full hover:bg-white/30 transition">
+            <X size={20} />
+          </button>
         </div>
         
         <div className="p-6 space-y-4">
@@ -115,7 +118,12 @@ const JobEditModal = ({ job, onClose, onSave, onDelete }) => {
              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                <div>
                   <label className="text-xs font-bold text-slate-500 uppercase ml-1">Data Început</label>
-                  <Input type="date" value={formData.start_date} onChange={e => setFormData({...formData, start_date: e.target.value})} />
+                  <Input
+                    type="date"
+                    value={formData.start_date}
+                    onChange={e => setFormData({...formData, start_date: e.target.value})}
+                    icon={Calendar} 
+                  />
                </div>
                <div>
                   <label className="text-xs font-bold text-slate-500 uppercase ml-1">Responsabil</label>
