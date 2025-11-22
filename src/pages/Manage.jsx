@@ -191,7 +191,6 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
       <div className="flex justify-between items-end px-1">
         <div>
           <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">
-            <Settings size={14} /> ADMINISTRARE
           </div>
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
             Setări <span className="text-indigo-600">Proiect</span>
