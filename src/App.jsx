@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from './lib/supabaseClient';
-import { Zap } from 'lucide-react'; // Iconita pentru logo
+import { Zap } from 'lucide-react';
 
 // Components
 import { Spinner, Toast, ConfirmModal } from './components/UI';
@@ -20,9 +20,7 @@ const WelcomeScreen = ({ onFinished }) => {
   const [fade, setFade] = useState(false);
   
   useEffect(() => {
-    // Porneste disparitia dupa 2 secunde
     const timer = setTimeout(() => setFade(true), 2000);
-    // Demonstare completa dupa 2.5 secunde (timp pentru animatie CSS)
     const removeTimer = setTimeout(onFinished, 2500);
     return () => { clearTimeout(timer); clearTimeout(removeTimer); };
   }, [onFinished]);
@@ -219,7 +217,6 @@ export default function App() {
       
       <div className="max-w-lg mx-auto min-h-screen relative bg-white shadow-2xl shadow-slate-200/50 sm:border-x sm:border-slate-100">
         <div className="p-6 animate-fade-in"> 
-          {/* Am adaugat o clasa de animatie simpla pe container */}
           
           {view === 'dashboard' && 
             <div className="animate-slide-up">
@@ -237,6 +234,7 @@ export default function App() {
                 employees={employees} jobs={jobs} materials={materials}
                 setEmployees={setEmployees} setJobs={setJobs} setMaterials={setMaterials}
                 showToast={showToast} requestDelete={requestDelete}
+                shifts={shifts}
               />
             </div>
           }
