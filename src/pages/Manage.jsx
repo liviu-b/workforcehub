@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Users, MapPin, Package, Plus, Settings, Trash2, Phone, Calendar, User, Clock, X, Save, Briefcase } from 'lucide-react';
 import { Card, Input, Button } from '../components/UI';
@@ -115,7 +114,7 @@ const JobEditModal = ({ job, onClose, onSave, onDelete }) => {
              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                <div>
                   <label className="text-xs font-bold text-slate-500 uppercase ml-1">Data Început</label>
-                  <Input type="date" value={formData.start_date} onChange={e => setFormData({...formData, start_date: e.target.value})} />
+                  <Input type="date" value={formData.start_date} onChange={e => setFormData({...formData, start_date: e.target.value})} icon={Calendar} />
                </div>
                <div>
                   <label className="text-xs font-bold text-slate-500 uppercase ml-1">Responsabil</label>
@@ -282,7 +281,7 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
         </div>
       </section>
 
-      {/* Sectiune Materiale (Ramane neschimbata la design, dar folosim stilul nou) */}
+      {/* Sectiune Materiale */}
       <section>
         <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-3 px-1">
           <Package size={20} className="text-indigo-500" /> Catalog Materiale

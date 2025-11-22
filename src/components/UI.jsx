@@ -59,7 +59,7 @@ export const Input = ({ value, onChange, onKeyDown, placeholder, type = "text", 
       placeholder={placeholder}
       autoFocus={autoFocus}
       className={cn(
-        "w-full appearance-none bg-slate-50 hover:bg-white border border-slate-200 rounded-xl py-3 text-slate-900 placeholder:text-slate-400 outline-none transition-all duration-200",
+        "block w-full h-12 appearance-none bg-slate-50 hover:bg-white border border-slate-200 rounded-xl py-3 text-slate-900 placeholder:text-slate-400 outline-none transition-all duration-200",
         "focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10",
         Icon ? 'pl-11 pr-4' : 'px-4',
         className
