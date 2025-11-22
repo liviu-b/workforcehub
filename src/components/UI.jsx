@@ -49,7 +49,7 @@ export const Button = ({ children, onClick, variant = 'primary', className = "",
 };
 
 export const Input = ({ value, onChange, onKeyDown, placeholder, type = "text", className = "", icon: Icon, autoFocus }) => (
-  <div className="relative flex-1 group">
+  <div className="relative w-full flex-1 group min-w-0">
     {Icon && <Icon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />}
     <input
       type={type}
@@ -59,7 +59,7 @@ export const Input = ({ value, onChange, onKeyDown, placeholder, type = "text", 
       placeholder={placeholder}
       autoFocus={autoFocus}
       className={cn(
-        "w-full bg-slate-50 hover:bg-white border border-slate-200 rounded-xl py-3 text-slate-900 placeholder:text-slate-400 outline-none transition-all duration-200",
+        "w-full appearance-none bg-slate-50 hover:bg-white border border-slate-200 rounded-xl py-3 text-slate-900 placeholder:text-slate-400 outline-none transition-all duration-200",
         "focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10",
         Icon ? 'pl-11 pr-4' : 'px-4',
         className
