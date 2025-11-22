@@ -187,7 +187,7 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
   };
 
   return (
-    <div className="space-y-8 pb-24 pt-4">
+    <div className="flex flex-col gap-8 pb-24 pt-4">
       {/* Header */}
       <div className="flex justify-between items-end px-1">
         <div>
@@ -283,6 +283,7 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
             </div>
           ))}
         </div>
+        {jobs.length === 0 && <div className="text-center p-4 text-slate-400 text-sm italic">Adaugă lucrări active.</div>}
       </section>
 
       {/* Sectiune Materiale */}
