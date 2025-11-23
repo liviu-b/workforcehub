@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from './lib/supabaseClient';
+import { Zap } from 'lucide-react';
 
 // Components
 import { Spinner, Toast, ConfirmModal } from './components/UI';
@@ -14,12 +15,42 @@ import ShiftDetailView from './pages/ShiftDetail';
 // Constants
 import { APP_ID } from './constants';
 
+// Componenta Welcome Screen
+const WelcomeScreen = ({ onFinished }) => {
+  const [fade, setFade] = useState(false);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => setFade(true), 2000);
+    const removeTimer = setTimeout(onFinished, 2500);
+    return () => { clearTimeout(timer); clearTimeout(removeTimer); };
+  }, [onFinished]);
+
+  return (
+    <div className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gradient-to-br from-indigo-600 to-purple-700 transition-opacity duration-500 ${fade ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+      <div className="text-center text-white animate-bounce-slight">
+        <div className="bg-white/20 p-4 rounded-full backdrop-blur-md inline-flex mb-6 shadow-2xl ring-4 ring-white/10">
+          <Zap size={48} className="text-white fill-white" />
+        </div>
+        <h1 className="text-4xl font-black tracking-tighter mb-2 drop-shadow-lg">Bun venit!</h1>
+        <p className="text-indigo-100 font-medium text-lg opacity-90">WorkforceHub</p>
+      </div>
+      
+      <div className="absolute bottom-8 text-center">
+        <p className="text-[10px] font-bold tracking-widest uppercase text-indigo-200/60">
+          Power by ACL-Smart Software
+        </p>
+      </div>
+    </div>
+  );
+};
+
 export default function App() {
   const [user, setUser] = useState(null);
   const [view, setView] = useState('dashboard'); 
   const [activeShiftId, setActiveShiftId] = useState(null);
   const [toast, setToast] = useState({ message: '', type: '' });
   const [confirmData, setConfirmData] = useState({ isOpen: false, message: '', action: null });
+  const [showWelcome, setShowWelcome] = useState(true); // State pentru welcome screen
   
   // Data State
   const [shifts, setShifts] = useState([]);
@@ -94,11 +125,6 @@ export default function App() {
       ]);
 
       if (shiftsError) console.error(shiftsError);
-      if (employeesError) console.error(employeesError);
-      if (jobsError) console.error(jobsError);
-      if (materialsError) console.error(materialsError);
-      if (profileError && profileError.code !== 'PGRST116') console.error(profileError);
-
       setShifts(shiftsData || []);
       setEmployees(employeesData || []);
       setJobs(jobsData || []);
@@ -116,7 +142,7 @@ export default function App() {
     if (user) fetchData();
   }, [user, fetchData]);
 
-  // Actions
+  // Actions (same as before)
   const requestDelete = (tableName, rowId, message) => {
     setConfirmData({
       isOpen: true,
@@ -179,41 +205,56 @@ export default function App() {
     }
   };
 
-  // Render
   if (loading) return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><Spinner /></div>;
   if (!user) return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500 font-medium">Se conectează...</div>;
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900">
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
+      {showWelcome && <WelcomeScreen onFinished={() => setShowWelcome(false)} />}
+      
       <Toast message={toast.message} type={toast.type} onClose={() => setToast({message:'', type:''})} />
       <ConfirmModal isOpen={confirmData.isOpen} message={confirmData.message} onConfirm={confirmData.action} onCancel={() => setConfirmData({ isOpen: false, message: '', action: null })} />
       
       <div className="max-w-lg mx-auto min-h-screen relative bg-white shadow-2xl shadow-slate-200/50 sm:border-x sm:border-slate-100">
-        <div className="p-6">
+        <div className="p-6 animate-fade-in"> 
+          
           {view === 'dashboard' && 
-            <Dashboard 
-              shifts={shifts} user={user} userName={userName} setUserName={setUserName} 
-              setActiveShiftId={setActiveShiftId} setView={setView} requestDelete={requestDelete} 
-              handleCreateShift={handleCreateShift} jobs={jobs} showToast={showToast}
-            />}
+            <div className="animate-slide-up">
+              <Dashboard 
+                shifts={shifts} user={user} userName={userName} setUserName={setUserName} 
+                setActiveShiftId={setActiveShiftId} setView={setView} requestDelete={requestDelete} 
+                handleCreateShift={handleCreateShift} jobs={jobs} showToast={showToast}
+              />
+            </div>
+          }
           
           {view === 'manage' && 
-            <ManageView 
-              employees={employees} jobs={jobs} materials={materials}
-              setEmployees={setEmployees} setJobs={setJobs} setMaterials={setMaterials}
-              showToast={showToast} requestDelete={requestDelete}
-            />}
+            <div className="animate-slide-up">
+              <ManageView 
+                employees={employees} jobs={jobs} materials={materials}
+                setEmployees={setEmployees} setJobs={setJobs} setMaterials={setMaterials}
+                showToast={showToast} requestDelete={requestDelete}
+                shifts={shifts}
+              />
+            </div>
+          }
           
           {view === 'shifts' && 
-            <ReportsView shifts={shifts} setActiveShiftId={setActiveShiftId} setView={setView} />}
+            <div className="animate-slide-up">
+              <ReportsView shifts={shifts} setActiveShiftId={setActiveShiftId} setView={setView} />
+            </div>
+          }
           
           {view === 'shift-detail' && 
-            <ShiftDetailView 
-              shift={shifts.find(s => s.id === activeShiftId)} 
-              activeShiftId={activeShiftId} setView={setView} requestDelete={requestDelete}
-              employees={employees} materials={materials} updateShiftLocally={updateShiftLocally}
-              showToast={showToast} user={user} userName={userName} fetchData={fetchData}
-            />}
+            <div className="animate-slide-in-right">
+              <ShiftDetailView 
+                shift={shifts.find(s => s.id === activeShiftId)} 
+                activeShiftId={activeShiftId} setView={setView} requestDelete={requestDelete}
+                employees={employees} materials={materials} updateShiftLocally={updateShiftLocally}
+                showToast={showToast} user={user} userName={userName} fetchData={fetchData}
+              />
+            </div>
+          }
         </div>
         {view !== 'shift-detail' && <MobileNav currentView={view} setView={setView} />}
       </div>
