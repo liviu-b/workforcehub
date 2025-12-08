@@ -1,5 +1,3 @@
-export const APP_ID = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-
 export const CONSTRUCTION_UNITS = [
   { value: 'buc', label: 'Bucăți' },
   { value: 'kg', label: 'Kilograme' },
