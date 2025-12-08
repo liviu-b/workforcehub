@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Clock, Edit2, Briefcase, Users, Plus, ChevronRight, Trash2, CheckCircle, Calendar } from 'lucide-react';
 import { Card, Button } from '../components/UI';
 import { supabase } from '../lib/supabaseClient';
-// REMOVED: import { APP_ID } from '../constants';
+import { APP_ID } from '../constants';
 
-export default function Dashboard({ appId, shifts, user, userName, setUserName, setActiveShiftId, setView, requestDelete, handleCreateShift, jobs, showToast }) {
+export default function Dashboard({ shifts, user, userName, setUserName, setActiveShiftId, setView, requestDelete, handleCreateShift, jobs, showToast }) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempName, setTempName] = useState(userName);
 
@@ -17,17 +17,14 @@ export default function Dashboard({ appId, shifts, user, userName, setUserName, 
   const saveName = async () => {
      if (tempName.trim()) {
        try {
-         // Using appId prop
-         await supabase.from('user_profiles').upsert({ app_id: appId, user_id: user.id, name: tempName.trim() }, { onConflict: 'app_id,user_id' });
+         await supabase.from('user_profiles').upsert({ app_id: APP_ID, user_id: user.id, name: tempName.trim() }, { onConflict: 'app_id,user_id' });
          setUserName(tempName.trim());
        } catch (e) { showToast('Eroare', 'error'); }
      }
      setIsEditingName(false);
   };
-  
-  // ... rest of the component (return ...) remains identical
+
   return (
-    // ... same JSX as before
     <div className="space-y-8 pb-24 pt-4">
       {/* Header */}
       <div className="flex justify-between items-end px-1">

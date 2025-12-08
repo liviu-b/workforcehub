@@ -3,11 +3,10 @@ import { ChevronRight, Clock, Download, Trash2, TrendingUp, Users, Package, Plus
 import { Card, Button, AutoSaveTextarea } from '../components/UI';
 import { formatDate, generatePDF } from '../utils/helpers';
 import { supabase } from '../lib/supabaseClient';
+import { APP_ID } from '../constants';
 
-// REMOVED: import { APP_ID } from '../constants';
-
-export default function ShiftDetailView({ appId, shift, activeShiftId, setView, requestDelete, employees, materials, updateShiftLocally, showToast, user, userName, fetchData }) {
-  // Dacă nu există date, nu randăm nimic
+export default function ShiftDetailView({ shift, activeShiftId, setView, requestDelete, employees, materials, updateShiftLocally, showToast, user, userName, fetchData }) {
+  // Dacă nu există date, nu randăm nimic sau putem pune un loader
   if (!shift) return null;
 
   const isApproved = shift.status === 'approved';
@@ -17,13 +16,10 @@ export default function ShiftDetailView({ appId, shift, activeShiftId, setView, 
   const updateShift = async (field, value) => {
     const partial = { [field]: value };
     updateShiftLocally(activeShiftId, partial);
-    
-    // UPDATED: Using appId prop instead of constant
     const { error } = await supabase
       .from('shifts')
       .update(partial)
-      .match({ id: activeShiftId, app_id: appId });
-
+      .match({ id: activeShiftId, app_id: APP_ID });
     if (error) {
       console.error(error);
       showToast('Eroare la salvare', 'error');
@@ -47,13 +43,10 @@ export default function ShiftDetailView({ appId, shift, activeShiftId, setView, 
 
     const partial = { assignedEmployeeIds: newIds, employeeHours: newHours };
     updateShiftLocally(activeShiftId, partial);
-    
-    // UPDATED: Using appId prop
     const { error } = await supabase
       .from('shifts')
       .update(partial)
-      .match({ id: activeShiftId, app_id: appId });
-
+      .match({ id: activeShiftId, app_id: APP_ID });
     if (error) {
       console.error(error);
       showToast('Eroare la salvare', 'error');
@@ -75,12 +68,10 @@ export default function ShiftDetailView({ appId, shift, activeShiftId, setView, 
 
     const partial = { materialUsage: updated };
     updateShiftLocally(activeShiftId, partial);
-
-    // UPDATED: Using appId prop
     const { error } = await supabase
       .from('shifts')
       .update(partial)
-      .match({ id: activeShiftId, app_id: appId });
+      .match({ id: activeShiftId, app_id: APP_ID });
     
     if (error) {
       console.error(error);
@@ -95,6 +86,7 @@ export default function ShiftDetailView({ appId, shift, activeShiftId, setView, 
   const approveShift = async () => {
     const nowIso = new Date().toISOString();
     
+    // 1. Actualizăm local starea (UI Optimistic)
     const partial = {
       status: 'approved',
       approvedAt: nowIso,
@@ -102,20 +94,21 @@ export default function ShiftDetailView({ appId, shift, activeShiftId, setView, 
       approvedByName: userName
     };
 
+    // Actualizăm UI-ul imediat
     updateShiftLocally(activeShiftId, partial);
 
     try {
-      // UPDATED: Using appId prop
+      // 2. Actualizăm baza de date
       const { error } = await supabase
         .from('shifts')
         .update(partial)
-        .match({ id: activeShiftId, app_id: appId });
+        .match({ id: activeShiftId, app_id: APP_ID });
 
       if (error) throw error;
 
       showToast('Raport aprobat cu succes!');
 
-      // Trimitem notificarea email
+      // 3. TRIMITEM NOTIFICAREA EMAIL (Aici apelăm funcția din cloud)
       console.log('Se trimite notificarea...');
       
       const { error: funcError } = await supabase.functions.invoke('send-shift-notification', {
@@ -123,6 +116,8 @@ export default function ShiftDetailView({ appId, shift, activeShiftId, setView, 
           shiftTitle: shift.jobTitle,
           approvedBy: userName,
           date: new Date(shift.date).toLocaleDateString('ro-RO'),
+          
+          // ⚠️ IMPORTANT: Schimbă adresa de mai jos cu adresa reală a administratorului sau a clientului
           recipientEmail: 'email' 
         }
       });
@@ -156,16 +151,7 @@ export default function ShiftDetailView({ appId, shift, activeShiftId, setView, 
            </div>
          </div>
          <div className="flex gap-2">
-           {/* AICI ESTE BUTONUL PDF */}
-           <Button 
-             variant="outline" 
-             size="icon" 
-             // Dacă ai actualizat helpers.js poți adăuga un al 4-lea parametru cu numele firmei
-             onClick={() => generatePDF(shift, employees, materials, "Numele Companiei Mele")}
-           >
-             <Download size={18} />
-           </Button>
-
+           <Button variant="outline" size="icon" onClick={() => generatePDF(shift, employees, materials)}><Download size={18} /></Button>
            <Button variant="danger" size="icon" onClick={() => requestDelete('shifts', shift.id, 'Ștergi raportul?')}><Trash2 size={18} /></Button>
          </div>
       </div>

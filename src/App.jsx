@@ -12,7 +12,8 @@ import ManageView from './pages/Manage';
 import ReportsView from './pages/Reports';
 import ShiftDetailView from './pages/ShiftDetail';
 
-// REMOVED: import { APP_ID } from './constants';
+// Constants
+import { APP_ID } from './constants';
 
 // Componenta Welcome Screen
 const WelcomeScreen = ({ onFinished }) => {
@@ -45,12 +46,11 @@ const WelcomeScreen = ({ onFinished }) => {
 
 export default function App() {
   const [user, setUser] = useState(null);
-  const [appId, setAppId] = useState(null); // STATE PENTRU MULTITENANCY
   const [view, setView] = useState('dashboard'); 
   const [activeShiftId, setActiveShiftId] = useState(null);
   const [toast, setToast] = useState({ message: '', type: '' });
   const [confirmData, setConfirmData] = useState({ isOpen: false, message: '', action: null });
-  const [showWelcome, setShowWelcome] = useState(true);
+  const [showWelcome, setShowWelcome] = useState(true); // State pentru welcome screen
   
   // Data State
   const [shifts, setShifts] = useState([]);
@@ -70,68 +70,34 @@ export default function App() {
     setShifts(prev => prev.map(s => (s.id === shiftId ? { ...s, ...partial } : s)));
   };
 
-  // Auth & Tenant Resolution
+  // Auth
   useEffect(() => {
     let isMounted = true;
     const initAuth = async () => {
       try {
-        // 1. Get User
-        let currentUser = null;
         const { data: { user: existingUser }, error } = await supabase.auth.getUser();
-        
-        if (existingUser) {
-          currentUser = existingUser;
-        } else {
-          // Auto login anonymously if no user
+        if (error) console.error('Auth error (getUser):', error);
+
+        if (!existingUser) {
           const { data, error: signInError } = await supabase.auth.signInAnonymously();
-          if (!signInError) currentUser = data.user;
-        }
-
-        if (currentUser && isMounted) {
-          setUser(currentUser);
-
-          // 2. Resolve Tenant (App ID)
-          // Cautam profilul utilizatorului sa vedem daca are deja un APP_ID asociat
-          const { data: profile } = await supabase
-            .from('user_profiles')
-            .select('app_id, name')
-            .eq('user_id', currentUser.id)
-            .maybeSingle();
-
-          if (profile?.app_id) {
-            // User existent -> Setam App ID-ul lui
-            setAppId(profile.app_id);
-            setUserName(profile.name || 'Utilizator');
-          } else {
-            // User nou -> Generam un App ID nou si il salvam
-            const newAppId = crypto.randomUUID();
-            const { error: profileError } = await supabase.from('user_profiles').insert({
-              user_id: currentUser.id,
-              app_id: newAppId,
-              name: 'Utilizator Nou'
-            });
-
-            if (!profileError) {
-              setAppId(newAppId);
-              setUserName('Utilizator Nou');
-            } else {
-              console.error('Error creating profile:', profileError);
-              showToast('Eroare inițializare cont', 'error');
-            }
+          if (signInError) {
+            console.error('Auth error:', signInError);
+            showToast('Eroare la autentificare', 'error');
+          } else if (isMounted) {
+            setUser(data.user);
           }
+        } else if (isMounted) {
+          setUser(existingUser);
         }
       } catch (err) {
         console.error('Auth Error:', err);
         showToast('Eroare la autentificare', 'error');
       }
     };
-
     initAuth();
-
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!isMounted) return;
       setUser(session?.user ?? null);
-      if (!session?.user) setAppId(null); // Reset appId on logout
     });
     return () => {
       isMounted = false;
@@ -141,7 +107,7 @@ export default function App() {
 
   // Data Fetching
   const fetchData = useCallback(async () => {
-    if (!user || !appId) return; // Fetch only if we have user AND appId
+    if (!user) return;
     setLoading(true);
     try {
       const [
@@ -149,11 +115,13 @@ export default function App() {
         { data: employeesData, error: employeesError },
         { data: jobsData, error: jobsError },
         { data: materialsData, error: materialsError },
+        { data: profileData, error: profileError },
       ] = await Promise.all([
-        supabase.from('shifts').select('*').eq('app_id', appId),
-        supabase.from('employees').select('*').eq('app_id', appId),
-        supabase.from('jobs').select('*').eq('app_id', appId),
-        supabase.from('materials').select('*').eq('app_id', appId),
+        supabase.from('shifts').select('*').eq('app_id', APP_ID),
+        supabase.from('employees').select('*').eq('app_id', APP_ID),
+        supabase.from('jobs').select('*').eq('app_id', APP_ID),
+        supabase.from('materials').select('*').eq('app_id', APP_ID),
+        supabase.from('user_profiles').select('*').eq('app_id', APP_ID).eq('user_id', user.id).maybeSingle(),
       ]);
 
       if (shiftsError) console.error(shiftsError);
@@ -161,26 +129,27 @@ export default function App() {
       setEmployees(employeesData || []);
       setJobs(jobsData || []);
       setMaterials(materialsData || []);
+      setUserName(profileData?.name || 'Utilizator');
     } catch (e) {
       console.error(e);
       showToast('Eroare la încărcarea datelor', 'error');
     } finally {
       setLoading(false);
     }
-  }, [user, appId]); // Added appId to dependencies
+  }, [user]);
 
   useEffect(() => {
-    if (user && appId) fetchData();
-  }, [user, appId, fetchData]);
+    if (user) fetchData();
+  }, [user, fetchData]);
 
-  // Actions
+  // Actions (same as before)
   const requestDelete = (tableName, rowId, message) => {
     setConfirmData({
       isOpen: true,
       message: message || 'Această acțiune este ireversibilă.',
       action: async () => {
         try {
-          const { error } = await supabase.from(tableName).delete().match({ id: rowId, app_id: appId });
+          const { error } = await supabase.from(tableName).delete().match({ id: rowId, app_id: APP_ID });
           if (error) throw error;
 
           if (tableName === 'shifts') {
@@ -205,11 +174,11 @@ export default function App() {
   };
 
   const handleCreateShift = async (jobId) => {
-    if (!user || !appId) return;
+    if (!user) return;
     const job = jobs.find(j => j.id === jobId);
     try {
       const newShift = {
-        app_id: appId, // Use dynamic appId
+        app_id: APP_ID,
         jobId,
         jobTitle: job?.title || 'Lucrare necunoscută',
         date: new Date().toISOString(),
@@ -236,7 +205,8 @@ export default function App() {
     }
   };
 
-  if (loading || !appId) return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><Spinner /></div>;
+  if (loading) return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><Spinner /></div>;
+  if (!user) return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500 font-medium">Se conectează...</div>;
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
@@ -251,7 +221,6 @@ export default function App() {
           {view === 'dashboard' && 
             <div className="animate-slide-up">
               <Dashboard 
-                appId={appId} // Pass prop
                 shifts={shifts} user={user} userName={userName} setUserName={setUserName} 
                 setActiveShiftId={setActiveShiftId} setView={setView} requestDelete={requestDelete} 
                 handleCreateShift={handleCreateShift} jobs={jobs} showToast={showToast}
@@ -262,7 +231,6 @@ export default function App() {
           {view === 'manage' && 
             <div className="animate-slide-up">
               <ManageView 
-                appId={appId} // Pass prop
                 employees={employees} jobs={jobs} materials={materials}
                 setEmployees={setEmployees} setJobs={setJobs} setMaterials={setMaterials}
                 showToast={showToast} requestDelete={requestDelete}
@@ -280,7 +248,6 @@ export default function App() {
           {view === 'shift-detail' && 
             <div className="animate-slide-in-right">
               <ShiftDetailView 
-                appId={appId} // Pass prop
                 shift={shifts.find(s => s.id === activeShiftId)} 
                 activeShiftId={activeShiftId} setView={setView} requestDelete={requestDelete}
                 employees={employees} materials={materials} updateShiftLocally={updateShiftLocally}

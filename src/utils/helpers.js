@@ -10,8 +10,7 @@ export const formatDate = (timestamp) => {
   return date.toLocaleDateString('ro-RO', { weekday: 'short', day: 'numeric', month: 'long' });
 };
 
-// Update: Added 'appName' parameter with a default value
-export const generatePDF = (shift, employees, materials, appName = 'WorkforceHub') => {
+export const generatePDF = (shift, employees, materials) => {
   const printWindow = window.open('', '_blank');
   
   const empList = shift.assignedEmployeeIds?.map(id => {
@@ -53,7 +52,7 @@ export const generatePDF = (shift, employees, materials, appName = 'WorkforceHub
       <div class="header">
         <div>
           <h1 class="title">Raport de Lucru</h1>
-          <div class="meta">${appName} • ${formatDate(shift.date)}</div>
+          <div class="meta">WorkforceHub • ${formatDate(shift.date)}</div>
         </div>
         <div class="status ${shift.status === 'approved' ? 'approved' : 'open'}">
           ${shift.status === 'approved' ? 'Aprobat Final' : 'Deschis'}
@@ -89,7 +88,7 @@ export const generatePDF = (shift, employees, materials, appName = 'WorkforceHub
         <div class="notes">${shift.notes || 'Fără observații.'}</div>
       </div>
       <div class="footer">
-        <div>Generat automat din ${appName}</div>
+        <div>Generat automat din WorkforceHub</div>
         <div class="signature">
            ${shift.status === 'approved' ? `
              Semnat digital de:
