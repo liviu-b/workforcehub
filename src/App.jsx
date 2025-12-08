@@ -7,13 +7,11 @@ import { Spinner, Toast, ConfirmModal } from './components/UI';
 import { MobileNav } from './components/MobileNav';
 
 // Pages
+import Auth from './pages/Auth'; // Import the new Auth page
 import Dashboard from './pages/Dashboard';
 import ManageView from './pages/Manage';
 import ReportsView from './pages/Reports';
 import ShiftDetailView from './pages/ShiftDetail';
-
-// Constants
-import { APP_ID } from './constants';
 
 // Componenta Welcome Screen
 const WelcomeScreen = ({ onFinished }) => {
@@ -50,7 +48,7 @@ export default function App() {
   const [activeShiftId, setActiveShiftId] = useState(null);
   const [toast, setToast] = useState({ message: '', type: '' });
   const [confirmData, setConfirmData] = useState({ isOpen: false, message: '', action: null });
-  const [showWelcome, setShowWelcome] = useState(true); // State pentru welcome screen
+  const [showWelcome, setShowWelcome] = useState(true);
   
   // Data State
   const [shifts, setShifts] = useState([]);
@@ -60,7 +58,10 @@ export default function App() {
   const [userName, setUserName] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // Helpers
+  // Derived APP_ID for Multi-tenancy
+  // We use the authenticated user's ID as the APP_ID to isolate their data
+  const currentAppId = user ? user.id : null;
+
   const showToast = (msg, type = 'success') => {
     setToast({ message: msg, type });
     setTimeout(() => setToast({ message: '', type: '' }), 3000);
@@ -70,86 +71,78 @@ export default function App() {
     setShifts(prev => prev.map(s => (s.id === shiftId ? { ...s, ...partial } : s)));
   };
 
-  // Auth
+  // Auth Listener
   useEffect(() => {
-    let isMounted = true;
-    const initAuth = async () => {
-      try {
-        const { data: { user: existingUser }, error } = await supabase.auth.getUser();
-        if (error) console.error('Auth error (getUser):', error);
-
-        if (!existingUser) {
-          const { data, error: signInError } = await supabase.auth.signInAnonymously();
-          if (signInError) {
-            console.error('Auth error:', signInError);
-            showToast('Eroare la autentificare', 'error');
-          } else if (isMounted) {
-            setUser(data.user);
-          }
-        } else if (isMounted) {
-          setUser(existingUser);
-        }
-      } catch (err) {
-        console.error('Auth Error:', err);
-        showToast('Eroare la autentificare', 'error');
-      }
-    };
-    initAuth();
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!isMounted) return;
+    // Check active session
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      setLoading(false);
     });
-    return () => {
-      isMounted = false;
-      listener?.subscription?.unsubscribe();
-    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   // Data Fetching
   const fetchData = useCallback(async () => {
-    if (!user) return;
-    setLoading(true);
+    if (!user || !currentAppId) return;
+    
+    // We don't set loading(true) here to avoid screen flickering on re-fetches
+    // But you could if you want a hard reload effect
     try {
       const [
         { data: shiftsData, error: shiftsError },
         { data: employeesData, error: employeesError },
         { data: jobsData, error: jobsError },
         { data: materialsData, error: materialsError },
-        { data: profileData, error: profileError },
+        // Fetch profile to get display name (metadata usually has it too)
+        { data: profileData } 
       ] = await Promise.all([
-        supabase.from('shifts').select('*').eq('app_id', APP_ID),
-        supabase.from('employees').select('*').eq('app_id', APP_ID),
-        supabase.from('jobs').select('*').eq('app_id', APP_ID),
-        supabase.from('materials').select('*').eq('app_id', APP_ID),
-        supabase.from('user_profiles').select('*').eq('app_id', APP_ID).eq('user_id', user.id).maybeSingle(),
+        supabase.from('shifts').select('*').eq('app_id', currentAppId),
+        supabase.from('employees').select('*').eq('app_id', currentAppId),
+        supabase.from('jobs').select('*').eq('app_id', currentAppId),
+        supabase.from('materials').select('*').eq('app_id', currentAppId),
+        supabase.from('user_profiles').select('*').eq('user_id', user.id).maybeSingle(),
       ]);
 
       if (shiftsError) console.error(shiftsError);
+
       setShifts(shiftsData || []);
       setEmployees(employeesData || []);
       setJobs(jobsData || []);
       setMaterials(materialsData || []);
-      setUserName(profileData?.name || 'Utilizator');
+      
+      // Fallback to metadata name if profile doesn't exist yet
+      const metaName = user.user_metadata?.full_name;
+      setUserName(profileData?.name || metaName || 'Utilizator');
+      
     } catch (e) {
       console.error(e);
       showToast('Eroare la încărcarea datelor', 'error');
-    } finally {
-      setLoading(false);
     }
-  }, [user]);
+  }, [user, currentAppId]);
 
   useEffect(() => {
     if (user) fetchData();
   }, [user, fetchData]);
 
-  // Actions (same as before)
+  // Actions
   const requestDelete = (tableName, rowId, message) => {
     setConfirmData({
       isOpen: true,
       message: message || 'Această acțiune este ireversibilă.',
       action: async () => {
         try {
-          const { error } = await supabase.from(tableName).delete().match({ id: rowId, app_id: APP_ID });
+          // IMPORTANT: match app_id to ensure users can only delete their own data
+          const { error } = await supabase
+            .from(tableName)
+            .delete()
+            .match({ id: rowId, app_id: currentAppId }); 
+            
           if (error) throw error;
 
           if (tableName === 'shifts') {
@@ -174,11 +167,11 @@ export default function App() {
   };
 
   const handleCreateShift = async (jobId) => {
-    if (!user) return;
+    if (!user || !currentAppId) return;
     const job = jobs.find(j => j.id === jobId);
     try {
       const newShift = {
-        app_id: APP_ID,
+        app_id: currentAppId, // Assign to current user's tenant
         jobId,
         jobTitle: job?.title || 'Lucrare necunoscută',
         date: new Date().toISOString(),
@@ -204,9 +197,19 @@ export default function App() {
       showToast('Eroare la creare', 'error');
     }
   };
+  
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setView('dashboard');
+    setShifts([]);
+    setEmployees([]);
+    setJobs([]);
+  };
 
   if (loading) return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><Spinner /></div>;
-  if (!user) return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500 font-medium">Se conectează...</div>;
+  
+  // If not logged in, show Auth Screen
+  if (!user) return <Auth />;
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
@@ -216,14 +219,27 @@ export default function App() {
       <ConfirmModal isOpen={confirmData.isOpen} message={confirmData.message} onConfirm={confirmData.action} onCancel={() => setConfirmData({ isOpen: false, message: '', action: null })} />
       
       <div className="max-w-lg mx-auto min-h-screen relative bg-white shadow-2xl shadow-slate-200/50 sm:border-x sm:border-slate-100">
-        <div className="p-6 animate-fade-in"> 
+        <div className="p-6 animate-fade-in pb-24"> 
           
+          {/* Header Bar with Logout */}
+          <div className="flex justify-between items-center mb-6 px-1">
+             <div className="flex flex-col">
+               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Salut,</span>
+               <span className="font-bold text-slate-900 text-lg">{userName}</span>
+             </div>
+             <Button variant="ghost" size="sm" onClick={handleLogout} className="text-rose-500 hover:bg-rose-50 hover:text-rose-600">
+               Deconectare
+             </Button>
+          </div>
+
           {view === 'dashboard' && 
             <div className="animate-slide-up">
               <Dashboard 
                 shifts={shifts} user={user} userName={userName} setUserName={setUserName} 
                 setActiveShiftId={setActiveShiftId} setView={setView} requestDelete={requestDelete} 
                 handleCreateShift={handleCreateShift} jobs={jobs} showToast={showToast}
+                // Pass currentAppId down if Dashboard creates items directly
+                appId={currentAppId}
               />
             </div>
           }
@@ -235,6 +251,7 @@ export default function App() {
                 setEmployees={setEmployees} setJobs={setJobs} setMaterials={setMaterials}
                 showToast={showToast} requestDelete={requestDelete}
                 shifts={shifts}
+                appId={currentAppId} // Pass this to Manage view for creating items
               />
             </div>
           }
