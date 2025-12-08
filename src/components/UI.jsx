@@ -1,14 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Loader2, CheckCircle, X, Trash2 } from 'lucide-react';
+import { CheckCircle, X, Trash2, Save, Loader2 } from 'lucide-react';
 
-export const cn = (...classes) => classes.filter(Boolean).join(' ');
+// Helper for conditional classes
+const cn = (...classes) => classes.filter(Boolean).join(' ');
 
-export const Card = ({ children, className = "", onClick, noPadding = false, hover = false }) => (
+export const Card = ({ children, className = "", onClick, noPadding = false }) => (
   <div 
     onClick={onClick}
     className={cn(
-      "bg-white border border-slate-200/60 shadow-sm rounded-2xl overflow-hidden transition-all duration-300",
-      hover && "hover:shadow-md hover:border-indigo-200 cursor-pointer hover:-translate-y-0.5",
+      "bg-white rounded-2xl border border-slate-100 shadow-[0_2px_8px_rgba(15,23,42,0.04)] transition-all duration-200 overflow-hidden",
+      onClick && "cursor-pointer hover:shadow-[0_8px_16px_rgba(15,23,42,0.06)] hover:-translate-y-0.5 hover:border-indigo-100",
       !noPadding && "p-5 sm:p-6",
       className
     )}
@@ -17,21 +18,21 @@ export const Card = ({ children, className = "", onClick, noPadding = false, hov
   </div>
 );
 
-export const Button = ({ children, onClick, variant = 'primary', className = "", icon: Icon, size = 'md', disabled, loading, fullWidth }) => {
-  const base = "relative inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-all duration-200 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-1";
+export const Button = ({ children, onClick, variant = 'primary', className = "", icon: Icon, size = 'md', disabled, loading }) => {
+  const baseStyle = "relative inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-all duration-200 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100 focus:outline-none focus:ring-2 focus:ring-offset-1";
   
   const variants = {
-    primary: "bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-200 focus:ring-indigo-500",
-    secondary: "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:text-slate-900 focus:ring-slate-200",
+    primary: "bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-600/20 focus:ring-indigo-500 border border-transparent",
+    success: "bg-emerald-500 text-white hover:bg-emerald-600 shadow-md shadow-emerald-500/20 focus:ring-emerald-500 border border-transparent",
     danger: "bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-100 focus:ring-rose-500",
-    ghost: "text-slate-500 hover:bg-slate-100 hover:text-slate-900",
-    success: "bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm shadow-emerald-200 focus:ring-emerald-500"
+    ghost: "text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus:ring-slate-200",
+    outline: "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 focus:ring-slate-200"
   };
 
   const sizes = {
     sm: "px-3 py-1.5 text-xs",
-    md: "px-4 py-2.5 text-sm",
-    lg: "px-6 py-3 text-base",
+    md: "px-5 py-2.5 text-sm",
+    lg: "px-6 py-3.5 text-base",
     icon: "p-2.5 aspect-square"
   };
 
@@ -39,75 +40,82 @@ export const Button = ({ children, onClick, variant = 'primary', className = "",
     <button 
       onClick={onClick} 
       disabled={disabled || loading}
-      className={cn(base, variants[variant], sizes[size], fullWidth && "w-full", className)}
+      className={cn(baseStyle, variants[variant], sizes[size], className)}
     >
-      {loading ? <Loader2 className="animate-spin" size={18} /> : Icon && <Icon size={18} strokeWidth={2.5} />}
+      {loading ? <Loader2 size={18} className="animate-spin" /> : Icon && <Icon size={size === 'sm' ? 16 : 18} strokeWidth={2.5} />}
       {!loading && children}
     </button>
   );
 };
 
-export const Input = ({ label, error, ...props }) => (
-  <div className="w-full">
-    {label && <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5 ml-1">{label}</label>}
-    <div className="relative group">
-      {props.icon && <props.icon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={18} />}
-      <input
-        {...props}
-        className={cn(
-          "block w-full h-11 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all",
-          props.icon ? 'pl-10 pr-4' : 'px-4',
-          error && "border-rose-300 focus:border-rose-500 focus:ring-rose-500/10",
-          props.className
-        )}
-      />
-    </div>
-    {error && <p className="text-xs text-rose-500 mt-1 ml-1">{error}</p>}
+export const Input = ({ value, onChange, onKeyDown, placeholder, type = "text", className = "", icon: Icon, autoFocus }) => (
+  <div className="relative w-full flex-1 group min-w-0">
+    {Icon && <Icon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />}
+    <input
+      type={type}
+      value={value}
+      onChange={onChange}
+      onKeyDown={onKeyDown}
+      placeholder={placeholder}
+      autoFocus={autoFocus}
+      className={cn(
+        "block w-full h-12 appearance-none bg-slate-50 hover:bg-white border border-slate-200 rounded-xl py-3 text-slate-900 placeholder:text-slate-400 outline-none transition-all duration-200",
+        "focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10",
+        Icon ? 'pl-11 pr-4' : 'px-4',
+        className
+      )}
+    />
   </div>
 );
 
-export const Badge = ({ children, variant = 'neutral', className }) => {
-  const styles = {
-    neutral: "bg-slate-100 text-slate-600",
-    success: "bg-emerald-50 text-emerald-700 border border-emerald-100",
-    warning: "bg-amber-50 text-amber-700 border border-amber-100",
-    primary: "bg-indigo-50 text-indigo-700 border border-indigo-100",
-  };
+export const Spinner = () => (
+  <div className="flex justify-center items-center h-64">
+    <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
+  </div>
+);
+
+export const Toast = ({ message, type, onClose }) => {
+  if (!message) return null;
+  const styles = type === 'success' 
+    ? 'bg-emerald-600 text-white ring-4 ring-emerald-600/20' 
+    : 'bg-rose-600 text-white ring-4 ring-rose-600/20';
+  
   return (
-    <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider", styles[variant], className)}>
-      {children}
-    </span>
+    <div className={cn("fixed top-6 left-1/2 -translate-x-1/2 px-5 py-4 rounded-2xl z-[70] flex items-center gap-3 animate-in slide-in-from-top-5 fade-in duration-300 shadow-2xl min-w-[340px] backdrop-blur-md", styles)}>
+      {type === 'success' ? <CheckCircle size={22} className="shrink-0" /> : <X size={22} className="shrink-0" />}
+      <span className="text-sm font-semibold flex-1 tracking-wide leading-tight">{message}</span>
+      <button onClick={onClose} className="opacity-80 hover:opacity-100 p-1 hover:bg-white/20 rounded-full transition-all"><X size={18} /></button>
+    </div>
   );
 };
 
-export const Modal = ({ isOpen, title, onClose, children }) => {
+export const ConfirmModal = ({ isOpen, message, onConfirm, onCancel }) => {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-enter">
-      <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-white/20 overflow-hidden flex flex-col max-h-[90vh]">
-        <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-          <h3 className="font-bold text-lg text-slate-800">{title}</h3>
-          <button onClick={onClose} className="p-1 hover:bg-slate-200 rounded-full transition"><X size={20} className="text-slate-500"/></button>
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
+        <div className="w-14 h-14 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-5">
+          <Trash2 size={28} className="text-rose-500" />
         </div>
-        <div className="p-6 overflow-y-auto">
-          {children}
+        <h3 className="text-xl font-bold mb-2 text-slate-900 text-center">Ești sigur?</h3>
+        <p className="text-slate-500 mb-8 text-center leading-relaxed">{message}</p>
+        <div className="grid grid-cols-2 gap-3">
+          <Button variant="outline" onClick={onCancel}>Nu, anulează</Button>
+          <Button variant="danger" onClick={onConfirm}>Da, șterge</Button>
         </div>
       </div>
     </div>
   );
 };
 
-export const Spinner = () => <div className="flex justify-center p-12"><Loader2 className="animate-spin text-indigo-600" size={32} /></div>;
-
-// Re-export other components (Toast, ConfirmModal, AutoSaveTextarea) keeping their logic but updating classes to match above style...
-// (Assuming you keep the logic for Toast/Confirm but update visual classes like rounded-2xl, shadow-sm, etc.)
 export const AutoSaveTextarea = ({ value, onSave, disabled, placeholder }) => {
-  // ... (Keep existing logic, update styles)
   const [localValue, setLocalValue] = useState(value || '');
   const [isSaving, setIsSaving] = useState(false);
   const timeoutRef = useRef(null);
   
-  useEffect(() => { setLocalValue(value || ''); }, [value]);
+  useEffect(() => {
+     setLocalValue(value || ''); 
+  }, [value]);
 
   const handleChange = (e) => {
     const val = e.target.value;
@@ -119,7 +127,7 @@ export const AutoSaveTextarea = ({ value, onSave, disabled, placeholder }) => {
         await onSave(val);
         setIsSaving(false);
       }
-    }, 1000);
+    }, 1000); // Debounce auto-save
   };
 
   return (
@@ -128,10 +136,14 @@ export const AutoSaveTextarea = ({ value, onSave, disabled, placeholder }) => {
         disabled={disabled}
         value={localValue}
         onChange={handleChange}
-        className="w-full p-4 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-sm min-h-[120px] focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all resize-none"
+        className="w-full p-4 bg-slate-50 group-hover:bg-white focus:bg-white border border-slate-200 rounded-2xl text-base min-h-[140px] focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-slate-900 placeholder:text-slate-400 resize-none leading-relaxed"
         placeholder={placeholder}
       />
-      {isSaving && <div className="absolute bottom-3 right-3 text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md flex gap-1"><Loader2 size={12} className="animate-spin"/> Salvăm...</div>}
+      {isSaving && (
+        <div className="absolute bottom-4 right-4 text-xs font-bold text-indigo-600 flex items-center gap-1.5 bg-indigo-50 px-3 py-1.5 rounded-full">
+          <Loader2 size={12} className="animate-spin" /> Salvăm...
+        </div>
+      )}
     </div>
   );
 };
