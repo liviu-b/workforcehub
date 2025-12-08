@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, forwardRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { CheckCircle, X, Trash2, Save, Loader2 } from 'lucide-react';
 
 // Helper for conditional classes
@@ -18,8 +18,7 @@ export const Card = ({ children, className = "", onClick, noPadding = false }) =
   </div>
 );
 
-// Button refactored to use forwardRef and spread props
-export const Button = forwardRef(({ children, onClick, variant = 'primary', className = "", icon: Icon, size = 'md', disabled, loading, ...props }, ref) => {
+export const Button = ({ children, onClick, variant = 'primary', className = "", icon: Icon, size = 'md', disabled, loading }) => {
   const baseStyle = "relative inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-all duration-200 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100 focus:outline-none focus:ring-2 focus:ring-offset-1";
   
   const variants = {
@@ -36,30 +35,23 @@ export const Button = forwardRef(({ children, onClick, variant = 'primary', clas
     lg: "px-6 py-3.5 text-base",
     icon: "p-2.5 aspect-square"
   };
-  
-  const iconSize = size === 'sm' ? 16 : 18;
 
   return (
     <button 
-      ref={ref}
       onClick={onClick} 
       disabled={disabled || loading}
       className={cn(baseStyle, variants[variant], sizes[size], className)}
-      {...props}
     >
-      {loading ? <Loader2 size={iconSize} className="animate-spin" /> : Icon && <Icon size={iconSize} strokeWidth={2.5} />}
+      {loading ? <Loader2 size={18} className="animate-spin" /> : Icon && <Icon size={size === 'sm' ? 16 : 18} strokeWidth={2.5} />}
       {!loading && children}
     </button>
   );
-});
-Button.displayName = 'Button';
+};
 
-// Input refactored to use forwardRef and spread props
-export const Input = forwardRef(({ value, onChange, onKeyDown, placeholder, type = "text", className = "", icon: Icon, autoFocus, ...props }, ref) => (
+export const Input = ({ value, onChange, onKeyDown, placeholder, type = "text", className = "", icon: Icon, autoFocus }) => (
   <div className="relative w-full flex-1 group min-w-0">
     {Icon && <Icon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />}
     <input
-      ref={ref}
       type={type}
       value={value}
       onChange={onChange}
@@ -72,12 +64,9 @@ export const Input = forwardRef(({ value, onChange, onKeyDown, placeholder, type
         Icon ? 'pl-11 pr-4' : 'px-4',
         className
       )}
-      {...props}
     />
   </div>
-));
-Input.displayName = 'Input';
-
+);
 
 export const Spinner = () => (
   <div className="flex justify-center items-center h-64">
