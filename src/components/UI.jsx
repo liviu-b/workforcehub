@@ -1,133 +1,152 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { CheckCircle, X, Trash2, Save, Loader2 } from 'lucide-react';
+import { Loader2, X, AlertCircle, CheckCircle2 } from 'lucide-react';
 
-// Helper for conditional classes
 const cn = (...classes) => classes.filter(Boolean).join(' ');
 
-export const Card = ({ children, className = "", onClick, noPadding = false }) => (
+// --- CARD COMPONENT ---
+export const Card = ({ children, className = "", onClick, noPadding = false, footer }) => (
   <div 
     onClick={onClick}
     className={cn(
-      "bg-white rounded-2xl border border-slate-100 shadow-[0_2px_8px_rgba(15,23,42,0.04)] transition-all duration-200 overflow-hidden",
-      onClick && "cursor-pointer hover:shadow-[0_8px_16px_rgba(15,23,42,0.06)] hover:-translate-y-0.5 hover:border-indigo-100",
-      !noPadding && "p-5 sm:p-6",
+      "bg-white rounded-xl border border-slate-200 shadow-sm transition-all duration-200 overflow-hidden",
+      onClick && "cursor-pointer hover:border-indigo-300 hover:shadow-md active:bg-slate-50",
       className
     )}
   >
-    {children}
+    <div className={cn(!noPadding && "p-5")}>
+      {children}
+    </div>
+    {footer && (
+      <div className="bg-slate-50 px-5 py-3 border-t border-slate-100 text-sm">
+        {footer}
+      </div>
+    )}
   </div>
 );
 
-export const Button = ({ children, onClick, variant = 'primary', className = "", icon: Icon, size = 'md', disabled, loading }) => {
-  const baseStyle = "relative inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-all duration-200 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100 focus:outline-none focus:ring-2 focus:ring-offset-1";
+// --- BUTTON COMPONENT ---
+export const Button = ({ children, onClick, variant = 'primary', className = "", icon: Icon, size = 'md', disabled, loading, fullWidth }) => {
+  const baseStyle = "inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed";
   
   const variants = {
-    primary: "bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-600/20 focus:ring-indigo-500 border border-transparent",
-    success: "bg-emerald-500 text-white hover:bg-emerald-600 shadow-md shadow-emerald-500/20 focus:ring-emerald-500 border border-transparent",
-    danger: "bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-100 focus:ring-rose-500",
-    ghost: "text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus:ring-slate-200",
-    outline: "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 focus:ring-slate-200"
+    primary: "bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500 shadow-sm",
+    secondary: "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:text-slate-900 focus:ring-slate-200 shadow-sm",
+    danger: "bg-white text-rose-600 border border-slate-200 hover:bg-rose-50 hover:border-rose-200 focus:ring-rose-500",
+    ghost: "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+    link: "text-indigo-600 hover:underline px-0 py-0 h-auto",
+    success: "bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm"
   };
 
   const sizes = {
     sm: "px-3 py-1.5 text-xs",
-    md: "px-5 py-2.5 text-sm",
-    lg: "px-6 py-3.5 text-base",
-    icon: "p-2.5 aspect-square"
+    md: "px-4 py-2 text-sm",
+    lg: "px-6 py-3 text-base",
+    icon: "p-2 aspect-square"
   };
 
   return (
     <button 
       onClick={onClick} 
       disabled={disabled || loading}
-      className={cn(baseStyle, variants[variant], sizes[size], className)}
+      className={cn(baseStyle, variants[variant], sizes[size], fullWidth && "w-full", className)}
     >
-      {loading ? <Loader2 size={18} className="animate-spin" /> : Icon && <Icon size={size === 'sm' ? 16 : 18} strokeWidth={2.5} />}
-      {!loading && children}
+      {loading ? <Loader2 size={16} className="animate-spin" /> : Icon && <Icon size={size === 'sm' ? 14 : 18} />}
+      {children}
     </button>
   );
 };
 
-export const Input = ({ value, onChange, onKeyDown, placeholder, type = "text", className = "", icon: Icon, autoFocus }) => (
-  <div className="relative w-full flex-1 group min-w-0">
-    {Icon && <Icon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />}
-    <input
-      type={type}
-      value={value}
-      onChange={onChange}
-      onKeyDown={onKeyDown}
-      placeholder={placeholder}
-      autoFocus={autoFocus}
-      className={cn(
-        "block w-full h-12 appearance-none bg-slate-50 hover:bg-white border border-slate-200 rounded-xl py-3 text-slate-900 placeholder:text-slate-400 outline-none transition-all duration-200",
-        "focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10",
-        Icon ? 'pl-11 pr-4' : 'px-4',
-        className
-      )}
-    />
+// --- INPUT COMPONENT ---
+export const Input = ({ value, onChange, onKeyDown, placeholder, type = "text", className = "", icon: Icon, label, error, ...props }) => (
+  <div className="w-full">
+    {label && <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">{label}</label>}
+    <div className="relative">
+      {Icon && <Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />}
+      <input
+        type={type}
+        value={value}
+        onChange={onChange}
+        onKeyDown={onKeyDown}
+        placeholder={placeholder}
+        className={cn(
+          "block w-full h-11 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-all",
+          "focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500",
+          "disabled:bg-slate-50 disabled:text-slate-500",
+          Icon ? 'pl-10 pr-4' : 'px-4',
+          error && "border-rose-500 focus:border-rose-500 focus:ring-rose-500",
+          className
+        )}
+        {...props}
+      />
+    </div>
+    {error && <p className="mt-1 text-xs text-rose-500 font-medium">{error}</p>}
   </div>
 );
 
+// --- SPINNER ---
 export const Spinner = () => (
-  <div className="flex justify-center items-center h-64">
-    <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
+  <div className="flex justify-center items-center p-8">
+    <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
   </div>
 );
 
+// --- TOAST NOTIFICATION ---
 export const Toast = ({ message, type, onClose }) => {
   if (!message) return null;
-  const styles = type === 'success' 
-    ? 'bg-emerald-600 text-white ring-4 ring-emerald-600/20' 
-    : 'bg-rose-600 text-white ring-4 ring-rose-600/20';
+  
+  const isError = type === 'error';
   
   return (
-    <div className={cn("fixed top-6 left-1/2 -translate-x-1/2 px-5 py-4 rounded-2xl z-[70] flex items-center gap-3 animate-in slide-in-from-top-5 fade-in duration-300 shadow-2xl min-w-[340px] backdrop-blur-md", styles)}>
-      {type === 'success' ? <CheckCircle size={22} className="shrink-0" /> : <X size={22} className="shrink-0" />}
-      <span className="text-sm font-semibold flex-1 tracking-wide leading-tight">{message}</span>
-      <button onClick={onClose} className="opacity-80 hover:opacity-100 p-1 hover:bg-white/20 rounded-full transition-all"><X size={18} /></button>
+    <div className={cn(
+      "fixed top-6 left-1/2 -translate-x-1/2 flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border backdrop-blur-md z-[100] min-w-[320px] animate-fade-in",
+      isError ? "bg-white/95 border-rose-100 text-rose-700" : "bg-white/95 border-emerald-100 text-slate-700"
+    )}>
+      {isError ? <AlertCircle size={20} className="text-rose-500 shrink-0" /> : <CheckCircle2 size={20} className="text-emerald-500 shrink-0" />}
+      <p className="text-sm font-medium flex-1">{message}</p>
+      <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X size={16} /></button>
     </div>
   );
 };
 
-export const ConfirmModal = ({ isOpen, message, onConfirm, onCancel }) => {
+// --- MODAL ---
+export const ConfirmModal = ({ isOpen, message, onConfirm, onCancel, title = "Confirmare" }) => {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
-        <div className="w-14 h-14 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-5">
-          <Trash2 size={28} className="text-rose-500" />
-        </div>
-        <h3 className="text-xl font-bold mb-2 text-slate-900 text-center">Ești sigur?</h3>
-        <p className="text-slate-500 mb-8 text-center leading-relaxed">{message}</p>
-        <div className="grid grid-cols-2 gap-3">
-          <Button variant="outline" onClick={onCancel}>Nu, anulează</Button>
-          <Button variant="danger" onClick={onConfirm}>Da, șterge</Button>
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[90] flex items-center justify-center p-4 animate-fade-in">
+      <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl animate-slide-up">
+        <h3 className="text-lg font-bold text-slate-900 mb-2">{title}</h3>
+        <p className="text-slate-600 mb-6 text-sm leading-relaxed">{message}</p>
+        <div className="flex justify-end gap-3">
+          <Button variant="secondary" onClick={onCancel}>Anulează</Button>
+          <Button variant="danger" onClick={onConfirm}>Confirmă</Button>
         </div>
       </div>
     </div>
   );
 };
 
+// --- AUTOSAVE TEXTAREA ---
 export const AutoSaveTextarea = ({ value, onSave, disabled, placeholder }) => {
   const [localValue, setLocalValue] = useState(value || '');
-  const [isSaving, setIsSaving] = useState(false);
+  const [status, setStatus] = useState('idle'); // idle, saving, saved
   const timeoutRef = useRef(null);
   
-  useEffect(() => {
-     setLocalValue(value || ''); 
-  }, [value]);
+  useEffect(() => { setLocalValue(value || ''); }, [value]);
 
   const handleChange = (e) => {
     const val = e.target.value;
     setLocalValue(val);
+    setStatus('typing');
     clearTimeout(timeoutRef.current);
+    
     timeoutRef.current = setTimeout(async () => {
       if (val !== value) {
-        setIsSaving(true);
+        setStatus('saving');
         await onSave(val);
-        setIsSaving(false);
+        setStatus('saved');
+        setTimeout(() => setStatus('idle'), 2000);
       }
-    }, 1000); // Debounce auto-save
+    }, 1000);
   };
 
   return (
@@ -136,14 +155,13 @@ export const AutoSaveTextarea = ({ value, onSave, disabled, placeholder }) => {
         disabled={disabled}
         value={localValue}
         onChange={handleChange}
-        className="w-full p-4 bg-slate-50 group-hover:bg-white focus:bg-white border border-slate-200 rounded-2xl text-base min-h-[140px] focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-slate-900 placeholder:text-slate-400 resize-none leading-relaxed"
+        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm min-h-[120px] focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all resize-none"
         placeholder={placeholder}
       />
-      {isSaving && (
-        <div className="absolute bottom-4 right-4 text-xs font-bold text-indigo-600 flex items-center gap-1.5 bg-indigo-50 px-3 py-1.5 rounded-full">
-          <Loader2 size={12} className="animate-spin" /> Salvăm...
-        </div>
-      )}
+      <div className="absolute bottom-3 right-3 text-xs font-medium text-slate-400 transition-opacity duration-300">
+        {status === 'saving' && <span className="flex items-center gap-1 text-indigo-600"><Loader2 size={10} className="animate-spin"/> Se salvează...</span>}
+        {status === 'saved' && <span className="text-emerald-600">Salvat</span>}
+      </div>
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Clock, Edit2, Briefcase, Users, Plus, ChevronRight, Trash2, CheckCircle, Calendar } from 'lucide-react';
-import { Card, Button } from '../components/UI';
+import { Clock, Briefcase, Users, Plus, ChevronRight, Calendar, ArrowUpRight } from 'lucide-react';
+import { Card, Button, Input } from '../components/UI';
 import { supabase } from '../lib/supabaseClient';
 import { APP_ID } from '../constants';
 
@@ -14,132 +14,138 @@ export default function Dashboard({ shifts, user, userName, setUserName, setActi
     return d.toLocaleDateString('ro-RO') === todayStr;
   });
 
+  const activeEmployeesCount = todaysShifts.reduce((acc, s) => acc + (s.assignedEmployeeIds?.length || 0), 0);
+
   const saveName = async () => {
      if (tempName.trim()) {
        try {
          await supabase.from('user_profiles').upsert({ app_id: APP_ID, user_id: user.id, name: tempName.trim() }, { onConflict: 'app_id,user_id' });
          setUserName(tempName.trim());
-       } catch (e) { showToast('Eroare', 'error'); }
+         setIsEditingName(false);
+       } catch (e) { showToast('Eroare la salvare', 'error'); }
      }
-     setIsEditingName(false);
   };
 
   return (
-    <div className="space-y-8 pb-24 pt-4">
-      {/* Header */}
-      <div className="flex justify-between items-end px-1">
+    <div className="space-y-6 pb-24 pt-2">
+      {/* --- Header Section --- */}
+      <header className="flex justify-between items-center px-1">
         <div>
-          <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">
-            <Calendar size={14} />
-            {new Date().toLocaleDateString('ro-RO', { weekday: 'long', month: 'long', day: 'numeric' })}
-          </div>
-          <div className="flex items-center gap-3">
-            {isEditingName ? (
-              <div className="flex gap-2 items-center">
-                <input 
-                  value={tempName} 
-                  onChange={e => setTempName(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && saveName()}
-                  autoFocus
-                  className="bg-transparent border-b-2 border-indigo-500 outline-none text-slate-900 font-bold text-3xl w-full max-w-[200px]"
-                />
-                <Button size="sm" icon={CheckCircle} onClick={saveName} />
-              </div>
-            ) : (
-              <div className="group flex items-center gap-2 cursor-pointer" onClick={() => { setTempName(userName); setIsEditingName(true); }}>
-                 <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Salut, <span className="text-indigo-600">{userName}</span></h1>
-                 <Edit2 size={16} className="text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
-              </div>
-            )}
-          </div>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">
+            {new Date().toLocaleDateString('ro-RO', { weekday: 'long', day: 'numeric', month: 'long' })}
+          </p>
+          {isEditingName ? (
+            <div className="flex gap-2 items-center mt-1">
+              <Input 
+                value={tempName} 
+                onChange={e => setTempName(e.target.value)}
+                onBlur={saveName}
+                autoFocus
+                className="h-8 text-xl font-bold border-transparent bg-transparent px-0 focus:ring-0 focus:border-b focus:border-indigo-500 rounded-none w-40"
+              />
+            </div>
+          ) : (
+            <h1 
+              onClick={() => { setTempName(userName); setIsEditingName(true); }}
+              className="text-2xl font-bold text-slate-900 cursor-pointer hover:text-indigo-600 transition-colors"
+            >
+              Salut, {userName}
+            </h1>
+          )}
         </div>
-        <div className="h-12 w-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold text-xl ring-4 ring-white shadow-lg">
+        <div className="h-10 w-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md shadow-indigo-200">
           {userName.charAt(0).toUpperCase()}
         </div>
-      </div>
+      </header>
 
-      {/* Stats Grid */}
+      {/* --- Quick Stats --- */}
       <div className="grid grid-cols-2 gap-4">
-        <Card className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-none shadow-indigo-500/20" noPadding>
-          <div className="p-6 relative overflow-hidden">
-            <Briefcase className="absolute -right-4 -bottom-4 text-white/10 w-24 h-24 rotate-12" />
-            <p className="text-indigo-100 text-xs font-bold uppercase tracking-wider mb-2">Lucrări Azi</p>
-            <p className="text-4xl font-black">{todaysShifts.length}</p>
+        <Card noPadding className="bg-slate-900 text-white border-slate-900 relative overflow-hidden">
+          <div className="p-5 relative z-10">
+            <div className="flex items-center gap-2 mb-3 opacity-80">
+              <Briefcase size={16} />
+              <span className="text-xs font-bold uppercase tracking-wider">Lucrări Azi</span>
+            </div>
+            <div className="flex items-end gap-2">
+              <span className="text-3xl font-bold leading-none">{todaysShifts.length}</span>
+              <span className="text-xs text-slate-400 mb-1">active</span>
+            </div>
           </div>
+          {/* Decorative Circle */}
+          <div className="absolute -right-4 -top-4 w-20 h-20 bg-white/5 rounded-full blur-xl" />
         </Card>
-        <Card className="bg-white border-slate-100" noPadding>
-          <div className="p-6 relative overflow-hidden">
-            <Users className="absolute -right-4 -bottom-4 text-slate-50 w-24 h-24 rotate-12" />
-            <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Muncitori</p>
-            <p className="text-4xl font-black text-slate-800">
-              {todaysShifts.reduce((acc, s) => acc + (s.assignedEmployeeIds?.length || 0), 0)}
-            </p>
+
+        <Card noPadding className="relative overflow-hidden">
+           <div className="p-5">
+            <div className="flex items-center gap-2 mb-3 text-slate-500">
+              <Users size={16} />
+              <span className="text-xs font-bold uppercase tracking-wider">Oameni</span>
+            </div>
+            <div className="flex items-end gap-2">
+              <span className="text-3xl font-bold leading-none text-slate-900">{activeEmployeesCount}</span>
+              <span className="text-xs text-slate-400 mb-1">pe teren</span>
+            </div>
           </div>
         </Card>
       </div>
 
-      {/* Active Activity */}
-      <section>
-        <div className="flex items-center justify-between mb-4 px-1">
-          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <Clock size={20} className="text-indigo-500" /> Activitate
-          </h2>
-        </div>
-        
+      {/* --- Action Bar --- */}
+      <div className="flex items-center justify-between px-1 pt-2">
+         <h2 className="text-lg font-bold text-slate-900">Activitate Recentă</h2>
+         {/* Dropdown for New Job could go here if list is long */}
+      </div>
+
+      {/* --- Feed / List --- */}
+      <div className="space-y-3">
         {todaysShifts.length === 0 ? (
-           <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50 text-center">
-             <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-sm mb-3 text-slate-300"><Clock size={24}/></div>
-             <p className="text-slate-500 font-medium">Nicio activitate azi</p>
-             <p className="text-sm text-slate-400">Pornește o lucrare nouă pentru a începe.</p>
+           <div className="text-center py-10 px-4 bg-white rounded-xl border border-dashed border-slate-200">
+             <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-400">
+               <Calendar size={20}/>
+             </div>
+             <p className="text-slate-900 font-medium text-sm">Niciun raport deschis</p>
+             <p className="text-slate-500 text-xs mt-1">Începe ziua prin crearea unei lucrări noi mai jos.</p>
            </div>
         ) : (
-          <div className="space-y-3">
-            {todaysShifts.map(s => (
-              <Card key={s.id} onClick={() => { setActiveShiftId(s.id); setView('shift-detail'); }} className="group flex items-center gap-4">
-                 <div className={`h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 transition-all ${
-                   s.status === 'approved' ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-50 text-indigo-600'
-                 }`}>
-                    {s.status === 'approved' ? <CheckCircle size={24} /> : <Clock size={24} />}
+          todaysShifts.map(s => (
+            <Card key={s.id} onClick={() => { setActiveShiftId(s.id); setView('shift-detail'); }} className="group flex items-center gap-4 hover:border-indigo-500 transition-colors">
+               <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${
+                 s.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-indigo-50 text-indigo-600'
+               }`}>
+                  {s.status === 'approved' ? <Clock size={20} /> : <Clock size={20} />}
+               </div>
+               <div className="flex-1 min-w-0">
+                 <h4 className="font-semibold text-slate-900 text-sm truncate">{s.jobTitle}</h4>
+                 <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
+                    <span>{s.assignedEmployeeIds?.length || 0} angajați</span>
+                    <span className="w-1 h-1 bg-slate-300 rounded-full" />
+                    <span className={s.progress > 0 ? "text-indigo-600 font-medium" : ""}>{s.progress}% finalizat</span>
                  </div>
-                 <div className="flex-1 min-w-0">
-                   <h4 className="font-bold text-slate-900 text-lg truncate">{s.jobTitle}</h4>
-                   <div className="flex items-center gap-3 text-xs font-medium mt-1">
-                      <span className="text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">{s.assignedEmployeeIds?.length || 0} oameni</span>
-                      {s.progress > 0 && <span className="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">{s.progress}% gata</span>}
-                   </div>
-                 </div>
-                 <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); requestDelete('shifts', s.id, 'Ștergi raportul?'); }} className="opacity-0 group-hover:opacity-100">
-                   <Trash2 size={18} className="text-rose-400 hover:text-rose-600"/>
-                 </Button>
-                 <ChevronRight size={20} className="text-slate-300" />
-              </Card>
-            ))}
-          </div>
+               </div>
+               <ChevronRight size={18} className="text-slate-300 group-hover:text-indigo-500" />
+            </Card>
+          ))
         )}
-      </section>
+      </div>
 
-      {/* Quick Actions */}
-      <section>
-        <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4 px-1">
-          <Plus size={20} className="text-indigo-500" /> Lucrare Nouă
-        </h2>
-        <div className="grid gap-3">
-           {jobs.length === 0 && <div className="p-6 text-center bg-slate-50 rounded-2xl text-slate-500 text-sm">Nu ai șantiere definite. Mergi la Admin.</div>}
+      {/* --- New Shift Section --- */}
+      <div className="pt-4">
+        <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-3 px-1">Pornește o lucrare nouă</h2>
+        <div className="grid gap-2">
            {jobs.map(job => (
              <button
                key={job.id}
                onClick={() => handleCreateShift(job.id)}
-               className="flex items-center justify-between w-full p-4 pl-5 bg-white border border-slate-200 hover:border-indigo-500 hover:shadow-lg hover:shadow-indigo-500/10 rounded-2xl transition-all group text-left"
+               className="flex items-center justify-between w-full p-4 bg-white border border-slate-200 hover:border-indigo-500 hover:shadow-md rounded-xl transition-all group text-left"
              >
-               <span className="font-bold text-slate-700 group-hover:text-indigo-700 transition-colors">{job.title}</span>
-               <div className="bg-slate-100 group-hover:bg-indigo-600 h-8 w-8 flex items-center justify-center rounded-full transition-all">
-                 <Plus size={16} className="text-slate-400 group-hover:text-white" strokeWidth={3} />
+               <span className="font-semibold text-slate-700 group-hover:text-indigo-700">{job.title}</span>
+               <div className="bg-slate-50 group-hover:bg-indigo-600 h-8 w-8 flex items-center justify-center rounded-full transition-colors">
+                 <Plus size={16} className="text-slate-400 group-hover:text-white" />
                </div>
              </button>
            ))}
+           {jobs.length === 0 && <p className="text-xs text-slate-400 italic px-1">Nu există șantiere definite. Mergi la Setări.</p>}
         </div>
-      </section>
-      <p className="text-center text-[10px] text-slate-300 pt-6">Power by ACL-Smart Software</p>
+      </div>
     </div>
   );
 }

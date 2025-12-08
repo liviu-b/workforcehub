@@ -1,8 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from './lib/supabaseClient';
-import { Zap } from 'lucide-react';
-
-// Components
 import { Spinner, Toast, ConfirmModal } from './components/UI';
 import { MobileNav } from './components/MobileNav';
 
@@ -12,37 +9,7 @@ import ManageView from './pages/Manage';
 import ReportsView from './pages/Reports';
 import ShiftDetailView from './pages/ShiftDetail';
 
-// Constants
 import { APP_ID } from './constants';
-
-// Componenta Welcome Screen
-const WelcomeScreen = ({ onFinished }) => {
-  const [fade, setFade] = useState(false);
-  
-  useEffect(() => {
-    const timer = setTimeout(() => setFade(true), 2000);
-    const removeTimer = setTimeout(onFinished, 2500);
-    return () => { clearTimeout(timer); clearTimeout(removeTimer); };
-  }, [onFinished]);
-
-  return (
-    <div className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gradient-to-br from-indigo-600 to-purple-700 transition-opacity duration-500 ${fade ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-      <div className="text-center text-white animate-bounce-slight">
-        <div className="bg-white/20 p-4 rounded-full backdrop-blur-md inline-flex mb-6 shadow-2xl ring-4 ring-white/10">
-          <Zap size={48} className="text-white fill-white" />
-        </div>
-        <h1 className="text-4xl font-black tracking-tighter mb-2 drop-shadow-lg">Bun venit!</h1>
-        <p className="text-indigo-100 font-medium text-lg opacity-90">WorkforceHub</p>
-      </div>
-      
-      <div className="absolute bottom-8 text-center">
-        <p className="text-[10px] font-bold tracking-widest uppercase text-indigo-200/60">
-          Power by ACL-Smart Software
-        </p>
-      </div>
-    </div>
-  );
-};
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -50,7 +17,6 @@ export default function App() {
   const [activeShiftId, setActiveShiftId] = useState(null);
   const [toast, setToast] = useState({ message: '', type: '' });
   const [confirmData, setConfirmData] = useState({ isOpen: false, message: '', action: null });
-  const [showWelcome, setShowWelcome] = useState(true); // State pentru welcome screen
   
   // Data State
   const [shifts, setShifts] = useState([]);
@@ -70,39 +36,26 @@ export default function App() {
     setShifts(prev => prev.map(s => (s.id === shiftId ? { ...s, ...partial } : s)));
   };
 
-  // Auth
+  // Auth & Init
   useEffect(() => {
     let isMounted = true;
     const initAuth = async () => {
       try {
-        const { data: { user: existingUser }, error } = await supabase.auth.getUser();
-        if (error) console.error('Auth error (getUser):', error);
-
+        const { data: { user: existingUser } } = await supabase.auth.getUser();
         if (!existingUser) {
-          const { data, error: signInError } = await supabase.auth.signInAnonymously();
-          if (signInError) {
-            console.error('Auth error:', signInError);
-            showToast('Eroare la autentificare', 'error');
-          } else if (isMounted) {
-            setUser(data.user);
-          }
+          const { data, error } = await supabase.auth.signInAnonymously();
+          if (!error && isMounted) setUser(data.user);
         } else if (isMounted) {
           setUser(existingUser);
         }
-      } catch (err) {
-        console.error('Auth Error:', err);
-        showToast('Eroare la autentificare', 'error');
-      }
+      } catch (err) { console.error(err); }
     };
     initAuth();
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!isMounted) return;
-      setUser(session?.user ?? null);
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (isMounted) setUser(session?.user ?? null);
     });
-    return () => {
-      isMounted = false;
-      listener?.subscription?.unsubscribe();
-    };
+    return () => { isMounted = false; subscription.unsubscribe(); };
   }, []);
 
   // Data Fetching
@@ -111,11 +64,11 @@ export default function App() {
     setLoading(true);
     try {
       const [
-        { data: shiftsData, error: shiftsError },
-        { data: employeesData, error: employeesError },
-        { data: jobsData, error: jobsError },
-        { data: materialsData, error: materialsError },
-        { data: profileData, error: profileError },
+        { data: shiftsData },
+        { data: employeesData },
+        { data: jobsData },
+        { data: materialsData },
+        { data: profileData },
       ] = await Promise.all([
         supabase.from('shifts').select('*').eq('app_id', APP_ID),
         supabase.from('employees').select('*').eq('app_id', APP_ID),
@@ -124,25 +77,21 @@ export default function App() {
         supabase.from('user_profiles').select('*').eq('app_id', APP_ID).eq('user_id', user.id).maybeSingle(),
       ]);
 
-      if (shiftsError) console.error(shiftsError);
       setShifts(shiftsData || []);
       setEmployees(employeesData || []);
       setJobs(jobsData || []);
       setMaterials(materialsData || []);
       setUserName(profileData?.name || 'Utilizator');
     } catch (e) {
-      console.error(e);
-      showToast('Eroare la încărcarea datelor', 'error');
+      showToast('Eroare la conexiune', 'error');
     } finally {
       setLoading(false);
     }
   }, [user]);
 
-  useEffect(() => {
-    if (user) fetchData();
-  }, [user, fetchData]);
+  useEffect(() => { if (user) fetchData(); }, [user, fetchData]);
 
-  // Actions (same as before)
+  // Actions
   const requestDelete = (tableName, rowId, message) => {
     setConfirmData({
       isOpen: true,
@@ -154,21 +103,15 @@ export default function App() {
 
           if (tableName === 'shifts') {
             setShifts(prev => prev.filter(s => s.id !== rowId));
-            if (activeShiftId === rowId) {
-              setView('dashboard');
-              setActiveShiftId(null);
-            }
+            if (activeShiftId === rowId) { setView('dashboard'); setActiveShiftId(null); }
           }
           if (tableName === 'employees') setEmployees(prev => prev.filter(e => e.id !== rowId));
           if (tableName === 'jobs') setJobs(prev => prev.filter(j => j.id !== rowId));
           if (tableName === 'materials') setMaterials(prev => prev.filter(m => m.id !== rowId));
 
           showToast('Șters cu succes!');
-          setConfirmData({ isOpen: false, message: '', action: null });
-        } catch (e) {
-          console.error(e);
-          showToast('Eroare la ștergere', 'error');
-        }
+        } catch (e) { showToast('Eroare la ștergere', 'error'); }
+        setConfirmData({ isOpen: false, message: '', action: null });
       }
     });
   };
@@ -180,7 +123,7 @@ export default function App() {
       const newShift = {
         app_id: APP_ID,
         jobId,
-        jobTitle: job?.title || 'Lucrare necunoscută',
+        jobTitle: job?.title || 'Lucrare',
         date: new Date().toISOString(),
         status: 'open',
         progress: 0,
@@ -198,64 +141,51 @@ export default function App() {
       setShifts(prev => [...prev, data]);
       setActiveShiftId(data.id);
       setView('shift-detail');
-      showToast('Raport nou creat!');
-    } catch (error) {
-      console.error(error);
-      showToast('Eroare la creare', 'error');
-    }
+      showToast('Raport inițiat');
+    } catch (error) { showToast('Eroare la creare', 'error'); }
   };
 
-  if (loading) return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><Spinner /></div>;
-  if (!user) return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500 font-medium">Se conectează...</div>;
+  if (loading || !user) return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><Spinner /></div>;
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
-      {showWelcome && <WelcomeScreen onFinished={() => setShowWelcome(false)} />}
-      
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
       <Toast message={toast.message} type={toast.type} onClose={() => setToast({message:'', type:''})} />
       <ConfirmModal isOpen={confirmData.isOpen} message={confirmData.message} onConfirm={confirmData.action} onCancel={() => setConfirmData({ isOpen: false, message: '', action: null })} />
       
-      <div className="max-w-lg mx-auto min-h-screen relative bg-white shadow-2xl shadow-slate-200/50 sm:border-x sm:border-slate-100">
-        <div className="p-6 animate-fade-in"> 
+      {/* Main Container - constrained width for mobile feel on desktop */}
+      <div className="max-w-lg mx-auto min-h-screen bg-white shadow-2xl shadow-slate-200/50 sm:border-x sm:border-slate-100 flex flex-col">
+        <div className="flex-1 p-5 animate-fade-in relative">
           
           {view === 'dashboard' && 
-            <div className="animate-slide-up">
-              <Dashboard 
-                shifts={shifts} user={user} userName={userName} setUserName={setUserName} 
-                setActiveShiftId={setActiveShiftId} setView={setView} requestDelete={requestDelete} 
-                handleCreateShift={handleCreateShift} jobs={jobs} showToast={showToast}
-              />
-            </div>
+            <Dashboard 
+              shifts={shifts} user={user} userName={userName} setUserName={setUserName} 
+              setActiveShiftId={setActiveShiftId} setView={setView} requestDelete={requestDelete} 
+              handleCreateShift={handleCreateShift} jobs={jobs} showToast={showToast}
+            />
           }
           
           {view === 'manage' && 
-            <div className="animate-slide-up">
-              <ManageView 
-                employees={employees} jobs={jobs} materials={materials}
-                setEmployees={setEmployees} setJobs={setJobs} setMaterials={setMaterials}
-                showToast={showToast} requestDelete={requestDelete}
-                shifts={shifts}
-              />
-            </div>
+            <ManageView 
+              employees={employees} jobs={jobs} materials={materials}
+              setEmployees={setEmployees} setJobs={setJobs} setMaterials={setMaterials}
+              showToast={showToast} requestDelete={requestDelete} shifts={shifts}
+            />
           }
           
           {view === 'shifts' && 
-            <div className="animate-slide-up">
-              <ReportsView shifts={shifts} setActiveShiftId={setActiveShiftId} setView={setView} />
-            </div>
+            <ReportsView shifts={shifts} setActiveShiftId={setActiveShiftId} setView={setView} />
           }
           
           {view === 'shift-detail' && 
-            <div className="animate-slide-in-right">
-              <ShiftDetailView 
-                shift={shifts.find(s => s.id === activeShiftId)} 
-                activeShiftId={activeShiftId} setView={setView} requestDelete={requestDelete}
-                employees={employees} materials={materials} updateShiftLocally={updateShiftLocally}
-                showToast={showToast} user={user} userName={userName} fetchData={fetchData}
-              />
-            </div>
+            <ShiftDetailView 
+              shift={shifts.find(s => s.id === activeShiftId)} 
+              activeShiftId={activeShiftId} setView={setView} requestDelete={requestDelete}
+              employees={employees} materials={materials} updateShiftLocally={updateShiftLocally}
+              showToast={showToast} user={user} userName={userName} fetchData={fetchData}
+            />
           }
         </div>
+        
         {view !== 'shift-detail' && <MobileNav currentView={view} setView={setView} />}
       </div>
     </div>
