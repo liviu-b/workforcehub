@@ -1,28 +1,47 @@
 import React, { useState } from 'react';
 import { Clock, Edit2, Briefcase, Users, Plus, ChevronRight, Trash2, CheckCircle, Calendar } from 'lucide-react';
 import { Card, Button } from '../components/UI';
-import { supabase } from '../lib/supabaseClient';
-import { APP_ID } from '../constants';
+// New: Import the custom hook
+import { useWorkforce } from '../App'; 
 
-export default function Dashboard({ shifts, user, userName, setUserName, setActiveShiftId, setView, requestDelete, handleCreateShift, jobs, showToast }) {
+// Dashboard only accepts local routing/action props
+export default function Dashboard({ setActiveShiftId, setView, requestDelete, handleCreateShift }) {
+  // Use the hook to get all necessary data and actions
+  const { shifts, userName, jobs, updateUserName } = useWorkforce();
+  
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempName, setTempName] = useState(userName);
 
   const todayStr = new Date().toLocaleDateString('ro-RO');
   const todaysShifts = shifts.filter(s => {
+    // Note: The original logic handles date objects and seconds-based dates.
     const d = s.date?.seconds ? new Date(s.date.seconds * 1000) : new Date(s.date);
     return d.toLocaleDateString('ro-RO') === todayStr;
   });
 
   const saveName = async () => {
      if (tempName.trim()) {
-       try {
-         await supabase.from('user_profiles').upsert({ app_id: APP_ID, user_id: user.id, name: tempName.trim() }, { onConflict: 'app_id,user_id' });
-         setUserName(tempName.trim());
-       } catch (e) { showToast('Eroare', 'error'); }
+       // Call the centralized action from the hook
+       const success = await updateUserName(tempName.trim());
+       if (success) {
+           setIsEditingName(false);
+       } else {
+           // Reset temp name if saving failed
+           setTempName(userName);
+           setIsEditingName(false);
+       }
+     } else {
+         // Reset if empty
+         setTempName(userName);
+         setIsEditingName(false);
      }
-     setIsEditingName(false);
   };
+  
+  // Update tempName when userName changes from the context/provider
+  // This is crucial for reflecting the saved name.
+  React.useEffect(() => {
+    setTempName(userName);
+  }, [userName]);
 
   return (
     <div className="space-y-8 pb-24 pt-4">
@@ -58,7 +77,7 @@ export default function Dashboard({ shifts, user, userName, setUserName, setActi
         </div>
       </div>
 
-      {/* Stats Grid */}
+      {/* Stats Grid - (No change needed) */}
       <div className="grid grid-cols-2 gap-4">
         <Card className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-none shadow-indigo-500/20" noPadding>
           <div className="p-6 relative overflow-hidden">
