@@ -1,92 +1,122 @@
-import React from 'react';
-import { ClipboardCheck, TrendingUp, Calendar, ChevronRight } from 'lucide-react';
-import { Card } from '../components/UI';
+import React, { useState, useMemo } from 'react';
+import { ClipboardCheck, Search, Calendar, ChevronRight, TrendingUp, CheckCircle, Clock } from 'lucide-react';
+import { Card, Badge } from '../components/UI';
 import { formatDate } from '../utils/helpers';
 
 export default function ReportsView({ shifts, setActiveShiftId, setView }) {
-  const sorted = [...shifts].sort((a, b) => (a.date > b.date ? -1 : 1));
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'open', 'approved'
+
+  // Filter & Sort Logic
+  const filteredShifts = useMemo(() => {
+    return shifts
+      .filter(s => {
+        const matchesSearch = s.jobTitle?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesStatus = statusFilter === 'all' 
+          ? true 
+          : statusFilter === 'approved' ? s.status === 'approved' : s.status !== 'approved';
+        return matchesSearch && matchesStatus;
+      })
+      .sort((a, b) => new Date(b.date) - new Date(a.date)); // Newest first
+  }, [shifts, searchTerm, statusFilter]);
 
   return (
-    <div className="space-y-8 pb-24 pt-4">
-      {/* Header Aligned with Dashboard/Manage */}
-      <div className="flex justify-between items-end px-1">
+    <div className="space-y-6">
+      {/* Header Section with Search & Filter */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">
-            <Calendar size={14} />
-            Istoric Complet
-          </div>
-          {/* SCHIMBAT: text-purple-600 -> text-indigo-600 */}
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-            Rapoarte <span className="text-indigo-600">Proiect</span>
-          </h1>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Rapoarte & Istoric</h1>
+          <p className="text-slate-500 text-sm mt-1">Gestionează și vizualizează rapoartele de activitate.</p>
         </div>
-        {/* SCHIMBAT: bg-purple-50/text-purple-600 -> bg-indigo-50/text-indigo-600 */}
-        <div className="h-12 w-12 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 shadow-sm">
-          <ClipboardCheck size={24} />
+        
+        {/* Controls */}
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+           {/* Search Input */}
+           <div className="relative group min-w-[200px]">
+             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={18} />
+             <input 
+               type="text" 
+               placeholder="Caută lucrare..." 
+               value={searchTerm}
+               onChange={(e) => setSearchTerm(e.target.value)}
+               className="w-full h-10 pl-10 pr-4 bg-white border border-slate-200 rounded-xl text-sm font-medium outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder:text-slate-400"
+             />
+           </div>
+           
+           {/* Filter Tabs */}
+           <div className="flex bg-slate-200/50 p-1 rounded-xl">
+              {['all', 'open', 'approved'].map((filter) => (
+                <button
+                  key={filter}
+                  onClick={() => setStatusFilter(filter)}
+                  className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold capitalize transition-all ${
+                    statusFilter === filter 
+                      ? 'bg-white text-indigo-600 shadow-sm' 
+                      : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
+                  }`}
+                >
+                  {filter === 'all' ? 'Tot' : filter === 'open' ? 'Active' : 'Finalizate'}
+                </button>
+              ))}
+           </div>
         </div>
       </div>
-      
-      <div className="grid gap-3">
-        {sorted.length === 0 && (
-           <div className="flex flex-col items-center justify-center py-16 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
-              <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-sm mb-4 text-slate-300">
-                <ClipboardCheck size={28} />
+
+      {/* Content Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredShifts.length === 0 ? (
+           <div className="col-span-full py-20 flex flex-col items-center justify-center text-center bg-white border border-dashed border-slate-200 rounded-3xl animate-enter">
+              <div className="w-16 h-16 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mb-4">
+                <ClipboardCheck size={32} />
               </div>
-              <h3 className="text-slate-900 font-bold text-lg">Nu există istoric</h3>
-              <p className="text-slate-400 text-sm mt-1">Rapoartele finalizate vor apărea aici.</p>
+              <h3 className="text-slate-900 font-bold text-lg">Nu am găsit rapoarte</h3>
+              <p className="text-slate-400 text-sm max-w-xs mx-auto mt-1">Încearcă să modifici filtrele sau creează o lucrare nouă din Dashboard.</p>
            </div>
-        )}
-
-        {sorted.map(s => (
-           <Card 
-            key={s.id} 
-            onClick={() => { setActiveShiftId(s.id); setView('shift-detail'); }}
-            /* SCHIMBAT: hover:border-purple-300 -> hover:border-indigo-300 */
-            className="group flex items-center gap-4 hover:border-indigo-300 transition-all"
-           >
-              {/* SCHIMBAT: Iconita 'purple' -> 'indigo' */}
-              <div className={`h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 transition-all ${
-                s.status === 'approved' 
-                  ? 'bg-emerald-50 text-emerald-600' // Pastrat verde doar pentru "Status: Aprobat" fiindca e semantic
-                  : 'bg-indigo-50 text-indigo-600'   // Restul e indigo
-              }`}>
-                 <ClipboardCheck size={24} />
-              </div>
-
-              <div className="flex-1 min-w-0">
-                 <div className="flex justify-between items-start">
-                    {/* SCHIMBAT: group-hover:text-purple-700 -> group-hover:text-indigo-700 */}
-                    <h4 className="font-bold text-slate-900 text-lg truncate group-hover:text-indigo-700 transition-colors">
-                      {s.jobTitle}
-                    </h4>
-                    <span className={`text-[10px] font-extrabold px-2 py-1 rounded-lg uppercase tracking-wider ml-2 ${
-                      s.status === 'approved' 
-                        ? 'bg-emerald-100 text-emerald-700' 
-                        : 'bg-slate-100 text-slate-600'
+        ) : (
+           filteredShifts.map(shift => (
+             <Card 
+               key={shift.id} 
+               hover 
+               onClick={() => { setActiveShiftId(shift.id); setView('shift-detail'); }}
+               className="group flex flex-col justify-between min-h-[180px] animate-enter"
+             >
+               <div>
+                 <div className="flex justify-between items-start mb-3">
+                    <div className={`p-2 rounded-xl transition-colors ${
+                       shift.status === 'approved' ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-50 text-indigo-600'
                     }`}>
-                      {s.status === 'approved' ? 'FINAL' : 'DESCHIS'}
-                    </span>
+                       {shift.status === 'approved' ? <CheckCircle size={20} /> : <Clock size={20} />}
+                    </div>
+                    <Badge variant={shift.status === 'approved' ? 'success' : 'warning'}>
+                       {shift.status === 'approved' ? 'Finalizat' : 'În Lucru'}
+                    </Badge>
                  </div>
                  
-                 <div className="flex items-center gap-3 text-xs text-slate-500 mt-1 font-medium">
-                    <span className="flex items-center gap-1 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100">
-                      <Calendar size={10} /> {formatDate(s.date)}
-                    </span>
-                    {s.progress > 0 && (
-                      /* SCHIMBAT: text-purple-600/bg-purple-50 -> text-indigo-600/bg-indigo-50 */
-                      <span className="text-indigo-600 flex items-center bg-indigo-50 px-2 py-0.5 rounded-md">
-                        <TrendingUp size={10} className="mr-1"/> {s.progress}%
-                      </span>
-                    )}
-                 </div>
-              </div>
-              
-              <ChevronRight size={20} className="text-slate-300 group-hover:text-indigo-400 transition-colors" />
-           </Card>
-        ))}
+                 <h3 className="font-bold text-slate-900 text-lg mb-1 line-clamp-2 leading-tight group-hover:text-indigo-600 transition-colors">
+                   {shift.jobTitle}
+                 </h3>
+                 <p className="text-xs text-slate-500 font-medium flex items-center gap-1.5">
+                    <Calendar size={12} /> {formatDate(shift.date)}
+                 </p>
+               </div>
+
+               <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
+                  <div className="flex items-center gap-3 text-xs font-bold text-slate-500">
+                     <span className="flex items-center gap-1" title="Progres">
+                        <TrendingUp size={14} className={shift.progress > 0 ? "text-indigo-500" : "text-slate-300"}/> 
+                        {shift.progress}%
+                     </span>
+                     <span className="text-slate-300">•</span>
+                     <span>{shift.assignedEmployeeIds?.length || 0} Membri</span>
+                  </div>
+                  <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                     <ChevronRight size={16} />
+                  </div>
+               </div>
+             </Card>
+           ))
+        )}
       </div>
-      
-      <p className="text-center text-[10px] text-slate-300 pt-6">Power by ACL-Smart Software</p>
     </div>
   );
 }
