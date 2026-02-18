@@ -131,10 +131,10 @@ export default function TimesheetView({ shifts, employees, updateShiftLocally, s
     <div className="space-y-6 pb-24 pt-2">
       <div className="flex justify-between items-start px-1">
         <div>
-          <div className="flex items-center gap-2 text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
+          <div className="flex items-center gap-2 text-indigo-600 text-xs font-semibold uppercase tracking-wider mb-1">
             <Clock3 size={14} /> Pontaj & Ore
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Timesheet <span className="text-slate-600">Lunar</span></h1>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Timesheet <span className="text-indigo-700">Lunar</span></h1>
         </div>
       </div>
 
@@ -144,10 +144,10 @@ export default function TimesheetView({ shifts, employees, updateShiftLocally, s
             type="month"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="h-11 px-3 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-500"
+            className="h-11 px-3 border border-indigo-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/15 focus:border-indigo-400"
           />
           <div className="flex items-center gap-2">
-            <p className="text-sm text-slate-600 font-semibold">Total ore: <span className="text-slate-900">{totalHours.toFixed(2)}</span></p>
+            <p className="text-sm text-indigo-700 font-semibold">Total ore: <span className="text-slate-900">{totalHours.toFixed(2)}</span></p>
             <Button variant="outline" onClick={exportCsv} icon={Download}>CSV</Button>
           </div>
         </div>
@@ -155,7 +155,7 @@ export default function TimesheetView({ shifts, employees, updateShiftLocally, s
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left border-b border-slate-200 text-slate-500 uppercase text-xs tracking-wider">
+              <tr className="text-left border-b border-indigo-100 text-indigo-600 uppercase text-xs tracking-wider">
                 <th className="py-3">Angajat</th>
                 <th className="py-3">Ore totale</th>
                 <th className="py-3">Zile lucrate</th>
@@ -165,7 +165,7 @@ export default function TimesheetView({ shifts, employees, updateShiftLocally, s
             </thead>
             <tbody>
               {rows.map((row) => (
-                <tr key={row.employeeId} className="border-b border-slate-100">
+                <tr key={row.employeeId} className="border-b border-indigo-50">
                   <td className="py-3 font-semibold text-slate-800">{row.name}</td>
                   <td className="py-3">{row.totalHours.toFixed(2)}</td>
                   <td className="py-3">{row.workedDays}</td>
@@ -178,11 +178,11 @@ export default function TimesheetView({ shifts, employees, updateShiftLocally, s
         </div>
 
         <div className="mt-6">
-          <h3 className="text-sm font-semibold text-slate-800 mb-3">Editare inline pontaj</h3>
+          <h3 className="text-sm font-semibold text-indigo-700 mb-3">Editare inline pontaj</h3>
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left border-b border-slate-200 text-slate-500 uppercase text-xs tracking-wider">
+                <tr className="text-left border-b border-indigo-100 text-indigo-600 uppercase text-xs tracking-wider">
                   <th className="py-3">Data</th>
                   <th className="py-3">Lucrare</th>
                   <th className="py-3">Angajat</th>
@@ -192,7 +192,7 @@ export default function TimesheetView({ shifts, employees, updateShiftLocally, s
               </thead>
               <tbody>
                 {entries.map((entry) => (
-                  <tr key={entry.key} className="border-b border-slate-100">
+                  <tr key={entry.key} className="border-b border-indigo-50">
                     <td className="py-2.5">{new Date(entry.date).toLocaleDateString('ro-RO')}</td>
                     <td className="py-2.5 font-medium text-slate-800">{entry.jobTitle}</td>
                     <td className="py-2.5">{entry.employeeName}</td>
@@ -204,10 +204,10 @@ export default function TimesheetView({ shifts, employees, updateShiftLocally, s
                         value={parseHours(entry.hours)}
                         onChange={(e) => handleHoursChange(entry, e.target.value)}
                         onBlur={(e) => saveHours(entry, e.target.value)}
-                        className="w-24 h-9 px-2 border border-slate-300 rounded-lg text-right"
+                        className="w-24 h-9 px-2 border border-indigo-200 rounded-lg text-right focus:ring-2 focus:ring-indigo-500/15 focus:border-indigo-400"
                       />
                     </td>
-                    <td className="py-2.5 text-xs text-slate-500">{savingKey === entry.key ? 'Se salvează…' : 'Salvat local'}</td>
+                    <td className="py-2.5 text-xs text-indigo-600">{savingKey === entry.key ? 'Se salvează…' : 'Salvat local'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -216,8 +216,8 @@ export default function TimesheetView({ shifts, employees, updateShiftLocally, s
 
           <div className="md:hidden space-y-2">
             {entries.map((entry) => (
-              <div key={entry.key} className="border border-slate-200 rounded-xl p-3 space-y-2">
-                <div className="text-xs text-slate-500">{new Date(entry.date).toLocaleDateString('ro-RO')} · {entry.jobTitle}</div>
+              <div key={entry.key} className="border border-indigo-100 rounded-xl p-3 space-y-2 bg-white/90">
+                <div className="text-xs text-indigo-600">{new Date(entry.date).toLocaleDateString('ro-RO')} · {entry.jobTitle}</div>
                 <div className="font-semibold text-slate-800 text-sm">{entry.employeeName}</div>
                 <div className="flex items-center justify-between gap-2">
                   <input
@@ -227,9 +227,9 @@ export default function TimesheetView({ shifts, employees, updateShiftLocally, s
                     value={parseHours(entry.hours)}
                     onChange={(e) => handleHoursChange(entry, e.target.value)}
                     onBlur={(e) => saveHours(entry, e.target.value)}
-                    className="w-28 h-9 px-2 border border-slate-300 rounded-lg text-right"
+                    className="w-28 h-9 px-2 border border-indigo-200 rounded-lg text-right"
                   />
-                  <span className="text-xs text-slate-500">{savingKey === entry.key ? 'Se salvează…' : 'OK'}</span>
+                  <span className="text-xs text-indigo-600">{savingKey === entry.key ? 'Se salvează…' : 'OK'}</span>
                 </div>
               </div>
             ))}
@@ -238,9 +238,9 @@ export default function TimesheetView({ shifts, employees, updateShiftLocally, s
 
         <div className="md:hidden space-y-2">
           {rows.map((row) => (
-            <div key={row.employeeId} className="border border-slate-200 rounded-xl p-3">
+            <div key={row.employeeId} className="border border-indigo-100 rounded-xl p-3 bg-white/90">
               <p className="font-semibold text-slate-800">{row.name}</p>
-              <p className="text-xs text-slate-500 mt-1">Ore: {row.totalHours.toFixed(2)} · Zile: {row.workedDays} · Medie: {row.avgHours.toFixed(2)}</p>
+              <p className="text-xs text-indigo-600 mt-1">Ore: {row.totalHours.toFixed(2)} · Zile: {row.workedDays} · Medie: {row.avgHours.toFixed(2)}</p>
             </div>
           ))}
         </div>

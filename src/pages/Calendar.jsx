@@ -44,10 +44,10 @@ export default function CalendarView({ shifts, jobs, handleCreateShift, setActiv
     <div className="space-y-6 pb-24 pt-2">
       <div className="flex justify-between items-start px-1">
         <div>
-          <div className="flex items-center gap-2 text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
+          <div className="flex items-center gap-2 text-indigo-600 text-xs font-semibold uppercase tracking-wider mb-1">
             <CalendarDays size={14} /> Planificare săptămânală
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Calendar <span className="text-slate-600">Lucrări</span></h1>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Calendar <span className="text-indigo-700">Lucrări</span></h1>
         </div>
       </div>
 
@@ -67,9 +67,9 @@ export default function CalendarView({ shifts, jobs, handleCreateShift, setActiv
             const isToday = new Date().toLocaleDateString('ro-RO') === key;
 
             return (
-              <div key={key} className={`border rounded-xl p-3 min-h-[220px] ${isToday ? 'border-slate-900 bg-slate-50' : 'border-slate-200 bg-white'}`}>
+              <div key={key} className={`border rounded-xl p-3 min-h-[220px] ${isToday ? 'border-indigo-500 bg-gradient-to-b from-indigo-50 to-purple-50' : 'border-indigo-100 bg-white/90'}`}>
                 <div className="mb-3">
-                  <p className="text-xs uppercase tracking-wider text-slate-500 font-semibold">{day.toLocaleDateString('ro-RO', { weekday: 'short' })}</p>
+                  <p className="text-xs uppercase tracking-wider text-indigo-600 font-semibold">{day.toLocaleDateString('ro-RO', { weekday: 'short' })}</p>
                   <p className="text-sm font-semibold text-slate-900">{day.toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit' })}</p>
                 </div>
 
@@ -78,10 +78,10 @@ export default function CalendarView({ shifts, jobs, handleCreateShift, setActiv
                     <button
                       key={shift.id}
                       onClick={() => { setActiveShiftId(shift.id); setView('shift-detail'); }}
-                      className="w-full text-left text-xs border border-slate-200 rounded-lg p-2 hover:border-slate-400"
+                      className="w-full text-left text-xs border border-indigo-100 rounded-lg p-2 hover:border-indigo-300 bg-white"
                     >
                       <p className="font-semibold text-slate-800 truncate">{shift.jobTitle}</p>
-                      <p className="text-slate-500 mt-1 flex items-center gap-1"><Clock size={12} /> {shift.progress || 0}%</p>
+                      <p className="text-indigo-600 mt-1 flex items-center gap-1"><Clock size={12} /> {shift.progress || 0}%</p>
                     </button>
                   ))}
                   {dayShifts.length === 0 && <p className="text-xs text-slate-400">Fără lucrări planificate.</p>}
@@ -92,7 +92,7 @@ export default function CalendarView({ shifts, jobs, handleCreateShift, setActiv
                     <button
                       key={job.id}
                       onClick={() => handleCreateShift(job.id, toIsoDate(day))}
-                      className="w-full text-left text-xs px-2 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1"
+                      className="w-full text-left text-xs px-2 py-1.5 rounded-lg bg-gradient-to-r from-indigo-100 to-purple-100 hover:from-indigo-200 hover:to-purple-200 text-indigo-800 flex items-center gap-1"
                     >
                       <Plus size={12} />
                       <span className="truncate">{job.title}</span>

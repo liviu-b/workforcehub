@@ -8,7 +8,7 @@ export const Card = ({ children, className = "", onClick, noPadding = false }) =
   <div 
     onClick={onClick}
     className={cn(
-      "bg-white/95 backdrop-blur-sm rounded-2xl border border-indigo-100/80 shadow-sm transition-all duration-200 overflow-hidden",
+      "bg-gradient-to-br from-white via-indigo-50/50 to-purple-50/45 backdrop-blur-sm rounded-2xl border border-indigo-200/90 shadow-sm transition-all duration-200 overflow-hidden",
       onClick && "cursor-pointer hover:shadow-md hover:border-indigo-200",
       !noPadding && "p-5 sm:p-6",
       className

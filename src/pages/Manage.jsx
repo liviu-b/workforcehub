@@ -34,8 +34,8 @@ const EmployeeEditModal = ({ employee, shifts, onClose, onSave, onDelete }) => {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white w-full max-w-md rounded-3xl shadow-xl overflow-hidden animate-slide-up border border-slate-200">
-        <div className="p-6 bg-slate-900 text-white flex justify-between items-start">
+      <div className="bg-white w-full max-w-md rounded-3xl shadow-xl overflow-hidden animate-slide-up border border-indigo-100">
+        <div className="p-6 bg-gradient-to-r from-indigo-600 to-purple-700 text-white flex justify-between items-start">
           <div>
             <h3 className="text-2xl font-bold">{formData.name}</h3>
             <p className="text-slate-300 text-sm">Detalii & Istoric</p>
@@ -65,8 +65,8 @@ const EmployeeEditModal = ({ employee, shifts, onClose, onSave, onDelete }) => {
           </div>
 
           {/* Istoric Ore */}
-          <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-             <h4 className="font-bold text-slate-700 mb-3 flex items-center gap-2"><Clock size={16} className="text-slate-700"/> Istoric Activitate</h4>
+           <div className="bg-indigo-50/50 rounded-2xl p-4 border border-indigo-100">
+             <h4 className="font-bold text-slate-700 mb-3 flex items-center gap-2"><Clock size={16} className="text-indigo-700"/> Istoric Activitate</h4>
              {Object.keys(stats).length === 0 ? (
                <p className="text-sm text-slate-400 italic">Nicio activitate înregistrată.</p>
              ) : (
@@ -104,8 +104,8 @@ const JobEditModal = ({ job, onClose, onSave, onDelete }) => {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white w-full max-w-md rounded-3xl shadow-xl overflow-hidden animate-slide-up border border-slate-200">
-        <div className="p-6 bg-slate-900 text-white flex justify-between items-start">
+      <div className="bg-white w-full max-w-md rounded-3xl shadow-xl overflow-hidden animate-slide-up border border-indigo-100">
+        <div className="p-6 bg-gradient-to-r from-indigo-600 to-purple-700 text-white flex justify-between items-start">
           <div>
             <h3 className="text-2xl font-bold">Editare Lucrare</h3>
             <p className="text-slate-300 text-sm">{formData.title}</p>
@@ -249,15 +249,15 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
         <div>
           <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">
           </div>
-          <div className="flex items-center gap-2 text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
+          <div className="flex items-center gap-2 text-indigo-600 text-xs font-semibold uppercase tracking-wider mb-1">
             <Calendar size={14} />
              Administrare
           </div>
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
-            Setări <span className="text-slate-600">Proiect</span>
+            Setări <span className="text-indigo-700">Proiect</span>
           </h1>
         </div>
-        <div className="h-11 w-11 bg-slate-900 rounded-full flex items-center justify-center text-white shadow-sm">
+        <div className="h-11 w-11 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-full flex items-center justify-center text-white shadow-sm">
           <Briefcase size={20} />
         </div>
       </div>
@@ -265,7 +265,7 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
       {/* Sectiune Angajati (GRID LAYOUT) */}
       <section>
         <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2 mb-3 px-1">
-          <Users size={18} className="text-slate-700" /> Echipă
+          <Users size={18} className="text-indigo-700" /> Echipă
         </h2>
         <div className="flex gap-2 mb-4">
           <Input 
@@ -283,11 +283,11 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
             <div 
               key={e.id} 
               onClick={() => setSelectedEmployee(e)}
-              className="group bg-white border border-slate-200 p-3 rounded-2xl shadow-sm hover:shadow-md hover:border-slate-400 transition-all cursor-pointer relative overflow-hidden"
+              className="group bg-white border border-indigo-100 p-3 rounded-2xl shadow-sm hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer relative overflow-hidden"
             >
-              <div className="absolute top-0 right-0 w-16 h-16 bg-slate-100 rounded-bl-full -mr-8 -mt-8 transition-colors group-hover:bg-slate-200"></div>
+              <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-100 rounded-bl-full -mr-8 -mt-8 transition-colors group-hover:bg-purple-100"></div>
               <div className="relative z-10">
-                <div className="h-10 w-10 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-lg mb-2">
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-600 to-purple-700 text-white flex items-center justify-center font-bold text-lg mb-2">
                    {e.name.charAt(0)}
                 </div>
                 <p className="font-bold text-slate-800 truncate">{e.name}</p>
@@ -305,7 +305,7 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
       {/* Sectiune Lucrari */}
       <section>
         <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2 mb-3 px-1">
-          <MapPin size={18} className="text-slate-700" /> Lucrări Active
+          <MapPin size={18} className="text-indigo-700" /> Lucrări Active
         </h2>
         <div className="flex gap-2 mb-4">
           <Input 
@@ -331,10 +331,10 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
             <div 
               key={j.id} 
               onClick={() => setSelectedJob(j)}
-              className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md hover:border-slate-400 transition-all cursor-pointer group"
+              className="flex items-center justify-between p-4 bg-white border border-indigo-100 rounded-2xl shadow-sm hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer group"
             >
               <div className="flex items-center gap-4 min-w-0">
-                <div className="h-10 w-10 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+                <div className="h-10 w-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
                   <MapPin size={20} />
                 </div>
                 <div className="min-w-0">
@@ -361,7 +361,7 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
       {/* Sectiune Materiale */}
       <section>
         <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2 mb-3 px-1">
-          <Package size={18} className="text-slate-700" /> Catalog Materiale
+          <Package size={18} className="text-indigo-700" /> Catalog Materiale
         </h2>
         <div className="flex gap-2 mb-4">
            <Input 
@@ -373,7 +373,7 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
            />
            <select 
              value={unit} onChange={e => setUnit(e.target.value)}
-             className="flex-1 bg-white border border-slate-300 rounded-xl px-2 text-sm font-bold text-slate-600 outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-500"
+             className="flex-1 bg-white border border-indigo-200 rounded-xl px-2 text-sm font-bold text-slate-600 outline-none focus:ring-2 focus:ring-indigo-500/15 focus:border-indigo-400"
            >
              {CONSTRUCTION_UNITS.map(u => <option key={u.value} value={u.value}>{u.label}</option>)}
            </select>
@@ -393,7 +393,7 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
         </div>
         <div className="space-y-2">
           {materials.map(m => (
-            <div key={m.id} className="flex items-center gap-2 px-3 py-2 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold border border-slate-200">
+            <div key={m.id} className="flex items-center gap-2 px-3 py-2 bg-indigo-50 text-slate-700 rounded-xl text-xs font-bold border border-indigo-100">
               <span className="flex-1">{m.name} ({m.unit})</span>
               <input
                 type="number"
@@ -405,16 +405,14 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
                   setMaterials(prev => prev.map(item => item.id === m.id ? { ...item, unitCost: val } : item));
                 }}
                 onBlur={(e) => updateData('materials', m.id, { unitCost: e.target.value }, setMaterials)}
-                className="w-24 h-8 px-2 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-right"
+                className="w-24 h-8 px-2 rounded-lg border border-indigo-200 bg-white text-xs font-semibold text-right"
               />
-              <span className="text-slate-500">RON/u</span>
+              <span className="text-indigo-600">RON/u</span>
               <button onClick={() => requestDelete('materials', m.id, `Ștergi ${m.name}?`)} className="hover:text-red-500 p-1"><Trash2 size={12} /></button>
             </div>
           ))}
         </div>
       </section>
-      <p className="text-center text-[10px] text-slate-300 pt-6">Power by ACL-Smart Software</p>
-
       {/* MODALE */}
       {selectedEmployee && (
         <EmployeeEditModal 

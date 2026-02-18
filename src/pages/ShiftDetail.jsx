@@ -180,14 +180,14 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
 
   return (
     <div className="pb-32 animate-in slide-in-from-right-5 duration-300">
-      <div className="sticky top-0 z-20 bg-white border-b border-slate-200 px-4 py-3 -mx-6 mb-6 flex items-center justify-between">
+      <div className="sticky top-0 z-20 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100 px-4 py-3 -mx-6 mb-6 flex items-center justify-between">
          <div className="flex items-center gap-2">
-           <button onClick={() => setView('dashboard')} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-600">
+           <button onClick={() => setView('dashboard')} className="p-2 hover:bg-indigo-100 rounded-full transition-colors text-indigo-700">
              <ChevronRight className="rotate-180" size={22} />
            </button>
            <div className="flex flex-col">
              <h2 className="font-semibold text-slate-900 text-base leading-none">{shift.jobTitle}</h2>
-             <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mt-1 flex items-center gap-1">
+             <span className="text-[10px] font-semibold text-indigo-600 uppercase tracking-wider mt-1 flex items-center gap-1">
                <Clock size={10} /> {formatDate(shift.date)}
              </span>
            </div>
@@ -212,7 +212,7 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
         <Card className={isApproved ? 'opacity-60 pointer-events-none' : ''}>
           <div className="flex justify-between items-center mb-4">
              <h3 className="font-semibold text-slate-900 flex items-center gap-2 text-sm">
-               <div className="bg-slate-100 p-1.5 rounded-lg text-slate-700"><TrendingUp size={16}/></div> Progres
+               <div className="bg-indigo-100 p-1.5 rounded-lg text-indigo-700"><TrendingUp size={16}/></div> Progres
              </h3>
              <span className="text-2xl font-bold text-slate-900">{shift.progress || 0}%</span>
           </div>
@@ -220,24 +220,24 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
             type="range" min="0" max="100" step="5" disabled={isApproved}
             value={shift.progress || 0}
             onChange={(e) => updateShift('progress', Number(e.target.value))}
-            className="w-full h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-800 transition-all"
+            className="w-full h-3 bg-indigo-100 rounded-lg appearance-none cursor-pointer accent-indigo-600 transition-all"
           />
         </Card>
 
         <Card className={isApproved ? 'opacity-60 pointer-events-none' : ''}>
           <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2 text-sm">
-            <div className="bg-slate-100 p-1.5 rounded-lg text-slate-700"><Users size={16}/></div> Echipă
+            <div className="bg-indigo-100 p-1.5 rounded-lg text-indigo-700"><Users size={16}/></div> Echipă
           </h3>
           
           {!isApproved && (
-            <div className="flex flex-wrap gap-2 mb-6 p-3 bg-slate-50 rounded-xl border border-slate-200">
+            <div className="flex flex-wrap gap-2 mb-6 p-3 bg-indigo-50 rounded-xl border border-indigo-100">
               {employees.map(emp => {
                 const isSelected = shift.assignedEmployeeIds?.includes(emp.id);
                 return (
                   <button
                     key={emp.id} onClick={() => toggleEmployee(emp.id)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${
-                      isSelected ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-300 hover:border-slate-500'
+                      isSelected ? 'bg-gradient-to-r from-indigo-600 to-purple-700 text-white border-indigo-600' : 'bg-white text-slate-600 border-indigo-200 hover:border-indigo-400'
                     }`}
                   >
                     {emp.name}
@@ -252,8 +252,8 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
                const emp = employees.find(e => e.id === id);
                return (
                  <div key={id} className="flex justify-between items-center p-3 bg-white border border-slate-100 rounded-xl shadow-sm">
-                   <span className="font-semibold text-slate-700 text-sm pl-2 border-l-2 border-slate-700">{emp?.name}</span>
-                   <div className="flex items-center gap-2 bg-slate-50 rounded-lg px-2 py-1">
+                   <span className="font-semibold text-slate-700 text-sm pl-2 border-l-2 border-indigo-500">{emp?.name}</span>
+                   <div className="flex items-center gap-2 bg-indigo-50 rounded-lg px-2 py-1">
                      <input 
                        type="number" min="0" max="24"
                        value={shift.employeeHours?.[id] ?? 8}
@@ -272,19 +272,19 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
 
         <Card className={isApproved ? 'opacity-60 pointer-events-none' : ''}>
            <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2 text-sm">
-            <div className="bg-slate-100 p-1.5 rounded-lg text-slate-700"><Package size={16}/></div> Materiale
+            <div className="bg-indigo-100 p-1.5 rounded-lg text-indigo-700"><Package size={16}/></div> Materiale
           </h3>
           
           {!isApproved && (
             <div className="flex gap-2 mb-5">
               <div className="relative flex-1">
-                <select id="matSelect" className="w-full appearance-none bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl px-4 py-3 outline-none focus:border-emerald-500 transition-all">
+                <select id="matSelect" className="w-full appearance-none bg-indigo-50 border border-indigo-100 text-slate-700 text-sm rounded-xl px-4 py-3 outline-none focus:border-indigo-400 transition-all">
                   <option value="">Alege material...</option>
                   {materials.map(m => <option key={m.id} value={m.id}>{m.name} ({m.unit})</option>)}
                 </select>
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</div>
               </div>
-              <input id="matQty" type="number" placeholder="Cant." className="w-20 bg-slate-50 border border-slate-200 rounded-xl px-2 text-center text-sm font-bold outline-none focus:border-slate-500 transition-all" />
+              <input id="matQty" type="number" placeholder="Cant." className="w-20 bg-indigo-50 border border-indigo-100 rounded-xl px-2 text-center text-sm font-bold outline-none focus:border-indigo-400 transition-all" />
               <Button size="icon" variant="success" icon={Plus} onClick={() => {
                 const s = document.getElementById('matSelect'), i = document.getElementById('matQty');
                 addMaterial(s.value, i.value);
@@ -297,10 +297,10 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
              {shift.materialUsage?.map((u, idx) => {
                 const mat = materials.find(m => m.id === u.materialId);
                 return (
-                  <div key={idx} className="flex justify-between items-center p-3 bg-slate-50/50 border border-slate-100 rounded-xl text-sm">
+                  <div key={idx} className="flex justify-between items-center p-3 bg-indigo-50/70 border border-indigo-100 rounded-xl text-sm">
                      <span className="font-medium text-slate-700">{mat?.name}</span>
                      <div className="flex items-center gap-3">
-                      <span className="font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded-md">{u.quantity} {mat?.unit}</span>
+                     <span className="font-bold text-indigo-700 bg-indigo-100 px-2 py-1 rounded-md">{u.quantity} {mat?.unit}</span>
                         {!isApproved && <button onClick={() => updateShift('materialUsage', shift.materialUsage.filter((_, i) => i !== idx))} className="text-slate-300 hover:text-rose-500"><X size={16}/></button>}
                      </div>
                   </div>
@@ -312,7 +312,7 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
 
         <Card className={isApproved ? 'opacity-60 pointer-events-none' : ''}>
           <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2 text-sm">
-            <div className="bg-slate-100 p-1.5 rounded-lg text-slate-700"><CheckCircle size={16}/></div> Checklist Lucrări
+            <div className="bg-indigo-100 p-1.5 rounded-lg text-indigo-700"><CheckCircle size={16}/></div> Checklist Lucrări
           </h3>
 
           {!isApproved && (
@@ -322,7 +322,7 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
                 onChange={(e) => setNewTaskText(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && addTask()}
                 placeholder="Adaugă pas de lucru..."
-                className="flex-1 h-11 px-3 bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-500"
+                className="flex-1 h-11 px-3 bg-white border border-indigo-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/15 focus:border-indigo-400"
               />
               <Button size="icon" onClick={addTask} icon={Plus} />
             </div>
@@ -333,7 +333,7 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
               <div key={task.id} className="flex items-center gap-3 p-3 border border-slate-200 rounded-xl bg-white">
                 <button
                   onClick={() => toggleTask(task.id)}
-                  className={`h-5 w-5 rounded-md border flex items-center justify-center ${task.done ? 'bg-slate-900 border-slate-900 text-white' : 'border-slate-300 text-transparent'}`}
+                  className={`h-5 w-5 rounded-md border flex items-center justify-center ${task.done ? 'bg-gradient-to-r from-indigo-600 to-purple-700 border-indigo-600 text-white' : 'border-indigo-200 text-transparent'}`}
                 >
                   <CheckCircle size={12} />
                 </button>
@@ -386,7 +386,6 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
             Estimarea vine din setările lucrării, iar costul real se calculează din ore x tarif angajat + consum materiale x cost unitar.
           </p>
         </Card>
-        <p className="text-center text-[10px] text-slate-300 pt-6">Power by ACL-Smart Software</p>
       </div>
 
       {!isApproved && (

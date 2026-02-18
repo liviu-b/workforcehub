@@ -38,10 +38,6 @@ export const DesktopNav = ({ currentView, setView }) => {
           );
         })}
       </nav>
-
-      <div className="mt-auto text-[11px] text-indigo-400 font-semibold tracking-wide">
-        Power by ACL-Smart Software
-      </div>
     </aside>
   );
 };
