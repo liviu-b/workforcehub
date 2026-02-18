@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { supabase } from './lib/supabaseClient';
+import { apiClient } from './lib/apiClient';
 import { Zap } from 'lucide-react';
 
 // Components
@@ -75,19 +75,15 @@ export default function App() {
     let isMounted = true;
     const initAuth = async () => {
       try {
-        const { data: { user: existingUser }, error } = await supabase.auth.getUser();
-        if (error) console.error('Auth error (getUser):', error);
+        const session = await apiClient.auth.getSession();
+        if (session.user && isMounted) {
+          setUser(session.user);
+          return;
+        }
 
-        if (!existingUser) {
-          const { data, error: signInError } = await supabase.auth.signInAnonymously();
-          if (signInError) {
-            console.error('Auth error:', signInError);
-            showToast('Eroare la autentificare', 'error');
-          } else if (isMounted) {
-            setUser(data.user);
-          }
-        } else if (isMounted) {
-          setUser(existingUser);
+        const signed = await apiClient.auth.signInAnonymously(APP_ID);
+        if (isMounted) {
+          setUser(signed.user);
         }
       } catch (err) {
         console.error('Auth Error:', err);
@@ -95,13 +91,8 @@ export default function App() {
       }
     };
     initAuth();
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!isMounted) return;
-      setUser(session?.user ?? null);
-    });
     return () => {
       isMounted = false;
-      listener?.subscription?.unsubscribe();
     };
   }, []);
 
@@ -110,26 +101,12 @@ export default function App() {
     if (!user) return;
     setLoading(true);
     try {
-      const [
-        { data: shiftsData, error: shiftsError },
-        { data: employeesData, error: employeesError },
-        { data: jobsData, error: jobsError },
-        { data: materialsData, error: materialsError },
-        { data: profileData, error: profileError },
-      ] = await Promise.all([
-        supabase.from('shifts').select('*').eq('app_id', APP_ID),
-        supabase.from('employees').select('*').eq('app_id', APP_ID),
-        supabase.from('jobs').select('*').eq('app_id', APP_ID),
-        supabase.from('materials').select('*').eq('app_id', APP_ID),
-        supabase.from('user_profiles').select('*').eq('app_id', APP_ID).eq('user_id', user.id).maybeSingle(),
-      ]);
-
-      if (shiftsError) console.error(shiftsError);
-      setShifts(shiftsData || []);
-      setEmployees(employeesData || []);
-      setJobs(jobsData || []);
-      setMaterials(materialsData || []);
-      setUserName(profileData?.name || 'Utilizator');
+      const bootstrap = await apiClient.getBootstrap();
+      setShifts(bootstrap.shifts || []);
+      setEmployees(bootstrap.employees || []);
+      setJobs(bootstrap.jobs || []);
+      setMaterials(bootstrap.materials || []);
+      setUserName(bootstrap.userName || 'Utilizator');
     } catch (e) {
       console.error(e);
       showToast('Eroare la încărcarea datelor', 'error');
@@ -149,8 +126,7 @@ export default function App() {
       message: message || 'Această acțiune este ireversibilă.',
       action: async () => {
         try {
-          const { error } = await supabase.from(tableName).delete().match({ id: rowId, app_id: APP_ID });
-          if (error) throw error;
+          await apiClient.deleteRecord(tableName, rowId);
 
           if (tableName === 'shifts') {
             setShifts(prev => prev.filter(s => s.id !== rowId));
@@ -192,8 +168,7 @@ export default function App() {
         createdBy: user.id,
       };
 
-      const { data, error } = await supabase.from('shifts').insert([newShift]).select().single();
-      if (error) throw error;
+      const data = await apiClient.createRecord('shifts', newShift);
 
       setShifts(prev => [...prev, data]);
       setActiveShiftId(data.id);
@@ -209,13 +184,13 @@ export default function App() {
   if (!user) return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500 font-medium">Se conectează...</div>;
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
+    <div className="min-h-screen bg-slate-100 font-sans text-slate-900 selection:bg-slate-300 selection:text-slate-900">
       {showWelcome && <WelcomeScreen onFinished={() => setShowWelcome(false)} />}
       
       <Toast message={toast.message} type={toast.type} onClose={() => setToast({message:'', type:''})} />
       <ConfirmModal isOpen={confirmData.isOpen} message={confirmData.message} onConfirm={confirmData.action} onCancel={() => setConfirmData({ isOpen: false, message: '', action: null })} />
       
-      <div className="max-w-lg mx-auto min-h-screen relative bg-white shadow-2xl shadow-slate-200/50 sm:border-x sm:border-slate-100">
+      <div className="max-w-lg mx-auto min-h-screen relative bg-white sm:border-x sm:border-slate-200 shadow-sm">
         <div className="p-6 animate-fade-in"> 
           
           {view === 'dashboard' && 

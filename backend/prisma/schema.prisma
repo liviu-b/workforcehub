@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+}
+
+model UserProfile {
+  id        String   @id @default(cuid())
+  app_id    String
+  user_id   String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([app_id, user_id])
+}
+
+model Employee {
+  id         String   @id @default(cuid())
+  app_id     String
+  name       String
+  phone      String?
+  hire_date  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Job {
+  id         String   @id @default(cuid())
+  app_id     String
+  title      String
+  location   String?
+  start_date String?
+  manager    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Material {
+  id        String   @id @default(cuid())
+  app_id    String
+  name      String
+  unit      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Shift {
+  id                  String   @id @default(cuid())
+  app_id              String
+  jobId               String?
+  jobTitle            String
+  date                String
+  status              String
+  progress            Int      @default(0)
+  assignedEmployeeIds Json
+  employeeHours       Json
+  materialUsage       Json
+  notes               String
+  approvedAt          String?
+  approvedBy          String?
+  approvedByName      String?
+  createdAt           String
+  createdBy           String?
+  updatedAt           DateTime @updatedAt
+}

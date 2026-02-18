@@ -7,32 +7,29 @@ export default function ReportsView({ shifts, setActiveShiftId, setView }) {
   const sorted = [...shifts].sort((a, b) => (a.date > b.date ? -1 : 1));
 
   return (
-    <div className="space-y-8 pb-24 pt-4">
-      {/* Header Aligned with Dashboard/Manage */}
-      <div className="flex justify-between items-end px-1">
+    <div className="space-y-6 pb-24 pt-2">
+      <div className="flex justify-between items-start px-1">
         <div>
-          <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">
+          <div className="flex items-center gap-2 text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
             <Calendar size={14} />
             Istoric Complet
           </div>
-          {/* SCHIMBAT: text-purple-600 -> text-indigo-600 */}
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-            Rapoarte <span className="text-indigo-600">Proiect</span>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+            Rapoarte <span className="text-slate-600">Proiect</span>
           </h1>
         </div>
-        {/* SCHIMBAT: bg-purple-50/text-purple-600 -> bg-indigo-50/text-indigo-600 */}
-        <div className="h-12 w-12 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 shadow-sm">
-          <ClipboardCheck size={24} />
+        <div className="h-11 w-11 bg-slate-900 rounded-full flex items-center justify-center text-white">
+          <ClipboardCheck size={20} />
         </div>
       </div>
       
       <div className="grid gap-3">
         {sorted.length === 0 && (
-           <div className="flex flex-col items-center justify-center py-16 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
-              <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-sm mb-4 text-slate-300">
-                <ClipboardCheck size={28} />
+           <div className="flex flex-col items-center justify-center py-16 bg-white rounded-2xl border border-dashed border-slate-300">
+              <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-4 text-slate-500">
+                <ClipboardCheck size={22} />
               </div>
-              <h3 className="text-slate-900 font-bold text-lg">Nu există istoric</h3>
+              <h3 className="text-slate-900 font-semibold text-lg">Nu există istoric</h3>
               <p className="text-slate-400 text-sm mt-1">Rapoartele finalizate vor apărea aici.</p>
            </div>
         )}
@@ -41,22 +38,19 @@ export default function ReportsView({ shifts, setActiveShiftId, setView }) {
            <Card 
             key={s.id} 
             onClick={() => { setActiveShiftId(s.id); setView('shift-detail'); }}
-            /* SCHIMBAT: hover:border-purple-300 -> hover:border-indigo-300 */
-            className="group flex items-center gap-4 hover:border-indigo-300 transition-all"
+            className="group flex items-center gap-4 hover:border-slate-500 transition-all"
            >
-              {/* SCHIMBAT: Iconita 'purple' -> 'indigo' */}
-              <div className={`h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 transition-all ${
+              <div className={`h-12 w-12 rounded-xl flex items-center justify-center shrink-0 ${
                 s.status === 'approved' 
-                  ? 'bg-emerald-50 text-emerald-600' // Pastrat verde doar pentru "Status: Aprobat" fiindca e semantic
-                  : 'bg-indigo-50 text-indigo-600'   // Restul e indigo
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : 'bg-slate-100 text-slate-700'
               }`}>
-                 <ClipboardCheck size={24} />
+                 <ClipboardCheck size={20} />
               </div>
 
               <div className="flex-1 min-w-0">
                  <div className="flex justify-between items-start">
-                    {/* SCHIMBAT: group-hover:text-purple-700 -> group-hover:text-indigo-700 */}
-                    <h4 className="font-bold text-slate-900 text-lg truncate group-hover:text-indigo-700 transition-colors">
+                    <h4 className="font-semibold text-slate-900 text-base truncate group-hover:text-slate-900 transition-colors">
                       {s.jobTitle}
                     </h4>
                     <span className={`text-[10px] font-extrabold px-2 py-1 rounded-lg uppercase tracking-wider ml-2 ${
@@ -69,19 +63,18 @@ export default function ReportsView({ shifts, setActiveShiftId, setView }) {
                  </div>
                  
                  <div className="flex items-center gap-3 text-xs text-slate-500 mt-1 font-medium">
-                    <span className="flex items-center gap-1 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100">
+                    <span className="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
                       <Calendar size={10} /> {formatDate(s.date)}
                     </span>
                     {s.progress > 0 && (
-                      /* SCHIMBAT: text-purple-600/bg-purple-50 -> text-indigo-600/bg-indigo-50 */
-                      <span className="text-indigo-600 flex items-center bg-indigo-50 px-2 py-0.5 rounded-md">
+                      <span className="text-slate-700 flex items-center bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
                         <TrendingUp size={10} className="mr-1"/> {s.progress}%
                       </span>
                     )}
                  </div>
               </div>
               
-              <ChevronRight size={20} className="text-slate-300 group-hover:text-indigo-400 transition-colors" />
+              <ChevronRight size={18} className="text-slate-400" />
            </Card>
         ))}
       </div>

@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Users, MapPin, Package, Plus, Settings, Trash2, Phone, Calendar, User, Clock, X, Save, Briefcase } from 'lucide-react';
 import { Card, Input, Button } from '../components/UI';
 import { CONSTRUCTION_UNITS, APP_ID } from '../constants';
-import { supabase } from '../lib/supabaseClient';
+import { apiClient } from '../lib/apiClient';
 
 // --- COMPONENTA EDITARE ANGAJAT ---
 const EmployeeEditModal = ({ employee, shifts, onClose, onSave, onDelete }) => {
@@ -28,11 +28,11 @@ const EmployeeEditModal = ({ employee, shifts, onClose, onSave, onDelete }) => {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-slide-up">
-        <div className="p-6 bg-indigo-600 text-white flex justify-between items-start">
+      <div className="bg-white w-full max-w-md rounded-3xl shadow-xl overflow-hidden animate-slide-up border border-slate-200">
+        <div className="p-6 bg-slate-900 text-white flex justify-between items-start">
           <div>
             <h3 className="text-2xl font-bold">{formData.name}</h3>
-            <p className="text-indigo-200 text-sm">Detalii & Istoric</p>
+            <p className="text-slate-300 text-sm">Detalii & Istoric</p>
           </div>
           <button onClick={onClose} className="bg-white/20 p-2 rounded-full hover:bg-white/30 transition"><X size={20} /></button>
         </div>
@@ -56,7 +56,7 @@ const EmployeeEditModal = ({ employee, shifts, onClose, onSave, onDelete }) => {
 
           {/* Istoric Ore */}
           <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-             <h4 className="font-bold text-slate-700 mb-3 flex items-center gap-2"><Clock size={16} className="text-indigo-500"/> Istoric Activitate</h4>
+             <h4 className="font-bold text-slate-700 mb-3 flex items-center gap-2"><Clock size={16} className="text-slate-700"/> Istoric Activitate</h4>
              {Object.keys(stats).length === 0 ? (
                <p className="text-sm text-slate-400 italic">Nicio activitate înregistrată.</p>
              ) : (
@@ -64,7 +64,7 @@ const EmployeeEditModal = ({ employee, shifts, onClose, onSave, onDelete }) => {
                  {Object.entries(stats).map(([month, hours]) => (
                    <div key={month} className="flex justify-between text-sm border-b border-slate-200 pb-1 last:border-0">
                      <span className="capitalize text-slate-600">{month}</span>
-                     <span className="font-bold text-indigo-600">{hours} ore</span>
+                     <span className="font-bold text-slate-800">{hours} ore</span>
                    </div>
                  ))}
                </div>
@@ -73,7 +73,7 @@ const EmployeeEditModal = ({ employee, shifts, onClose, onSave, onDelete }) => {
 
           <div className="flex gap-3 pt-2">
             <Button variant="ghost" onClick={() => onDelete(employee.id)} className="text-rose-500 bg-rose-50 hover:bg-rose-100 flex-1">Șterge</Button>
-            <Button onClick={() => onSave(employee.id, formData)} icon={Save} className="flex-[2] bg-indigo-600">Salvează</Button>
+            <Button onClick={() => onSave(employee.id, formData)} icon={Save} className="flex-[2]">Salvează</Button>
           </div>
         </div>
       </div>
@@ -92,11 +92,11 @@ const JobEditModal = ({ job, onClose, onSave, onDelete }) => {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-slide-up">
-        <div className="p-6 bg-orange-500 text-white flex justify-between items-start">
+      <div className="bg-white w-full max-w-md rounded-3xl shadow-xl overflow-hidden animate-slide-up border border-slate-200">
+        <div className="p-6 bg-slate-900 text-white flex justify-between items-start">
           <div>
             <h3 className="text-2xl font-bold">Editare Lucrare</h3>
-            <p className="text-orange-100 text-sm">{formData.title}</p>
+            <p className="text-slate-300 text-sm">{formData.title}</p>
           </div>
           <button onClick={onClose} className="bg-white/20 p-2 rounded-full hover:bg-white/30 transition"><X size={20} /></button>
         </div>
@@ -125,7 +125,7 @@ const JobEditModal = ({ job, onClose, onSave, onDelete }) => {
 
           <div className="flex gap-3 pt-4">
             <Button variant="ghost" onClick={() => onDelete(job.id)} className="text-rose-500 bg-rose-50 hover:bg-rose-100 flex-1">Șterge</Button>
-            <Button onClick={() => onSave(job.id, formData)} icon={Save} className="flex-[2] bg-orange-500 hover:bg-orange-600 border-orange-500 shadow-orange-200">Salvează</Button>
+            <Button onClick={() => onSave(job.id, formData)} icon={Save} className="flex-[2]">Salvează</Button>
           </div>
         </div>
       </div>
@@ -147,13 +147,7 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
   const addData = async (tableName, data, resetFn) => {
     if (!data.name && !data.title) return;
     try {
-      const { data: inserted, error } = await supabase
-        .from(tableName)
-        .insert([{ ...data, app_id: APP_ID }])
-        .select()
-        .single();
-
-      if (error) throw error;
+      const inserted = await apiClient.createRecord(tableName, { ...data, app_id: APP_ID });
 
       showToast('Adăugat cu succes!');
       resetFn('');
@@ -168,13 +162,7 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
 
   const updateData = async (tableName, id, updates, stateSetter) => {
     try {
-      const { error } = await supabase
-        .from(tableName)
-        .update(updates)
-        .eq('id', id)
-        .eq('app_id', APP_ID);
-
-      if (error) throw error;
+      await apiClient.updateRecord(tableName, id, updates);
 
       stateSetter(prev => prev.map(item => item.id === id ? { ...item, ...updates } : item));
       showToast('Actualizat cu succes!');
@@ -187,29 +175,29 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
   };
 
   return (
-    <div className="flex flex-col gap-8 pb-24 pt-4">
+    <div className="flex flex-col gap-6 pb-24 pt-2">
       {/* Header */}
-      <div className="flex justify-between items-end px-1">
+      <div className="flex justify-between items-start px-1">
         <div>
           <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">
           </div>
-          <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">
+          <div className="flex items-center gap-2 text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
             <Calendar size={14} />
              Administrare
           </div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-            Setări <span className="text-indigo-600">Proiect</span>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+            Setări <span className="text-slate-600">Proiect</span>
           </h1>
         </div>
-        <div className="h-12 w-12 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 shadow-sm">
-          <Briefcase size={24} />
+        <div className="h-11 w-11 bg-slate-900 rounded-full flex items-center justify-center text-white shadow-sm">
+          <Briefcase size={20} />
         </div>
       </div>
 
       {/* Sectiune Angajati (GRID LAYOUT) */}
       <section>
-        <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-3 px-1">
-          <Users size={20} className="text-indigo-500" /> Echipă
+        <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2 mb-3 px-1">
+          <Users size={18} className="text-slate-700" /> Echipă
         </h2>
         <div className="flex gap-2 mb-4">
           <Input 
@@ -219,7 +207,7 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
             placeholder="Nume nou..." 
             className="flex-1"
           />
-          <Button size="icon" onClick={() => addData('employees', { name: newEmp }, setNewEmp)} icon={Plus} className="bg-indigo-600 rounded-xl"/>
+          <Button size="icon" onClick={() => addData('employees', { name: newEmp }, setNewEmp)} icon={Plus} className="rounded-xl"/>
         </div>
         
         <div className="grid grid-cols-2 gap-3">
@@ -227,11 +215,11 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
             <div 
               key={e.id} 
               onClick={() => setSelectedEmployee(e)}
-              className="group bg-white border border-slate-100 p-3 rounded-2xl shadow-sm hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer relative overflow-hidden"
+              className="group bg-white border border-slate-200 p-3 rounded-2xl shadow-sm hover:shadow-md hover:border-slate-400 transition-all cursor-pointer relative overflow-hidden"
             >
-              <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-50 rounded-bl-full -mr-8 -mt-8 transition-colors group-hover:bg-indigo-100"></div>
+              <div className="absolute top-0 right-0 w-16 h-16 bg-slate-100 rounded-bl-full -mr-8 -mt-8 transition-colors group-hover:bg-slate-200"></div>
               <div className="relative z-10">
-                <div className="h-10 w-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-lg mb-2">
+                <div className="h-10 w-10 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-lg mb-2">
                    {e.name.charAt(0)}
                 </div>
                 <p className="font-bold text-slate-800 truncate">{e.name}</p>
@@ -247,8 +235,8 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
 
       {/* Sectiune Lucrari */}
       <section>
-        <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-3 px-1">
-          <MapPin size={20} className="text-indigo-500" /> Lucrări Active
+        <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2 mb-3 px-1">
+          <MapPin size={18} className="text-slate-700" /> Lucrări Active
         </h2>
         <div className="flex gap-2 mb-4">
           <Input 
@@ -258,7 +246,7 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
             placeholder="Lucrare nouă..." 
             className="flex-1"
           />
-          <Button size="icon" onClick={() => addData('jobs', { title: newJob }, setNewJob)} icon={Plus} className="bg-indigo-600 rounded-xl"/>
+          <Button size="icon" onClick={() => addData('jobs', { title: newJob }, setNewJob)} icon={Plus} className="rounded-xl"/>
         </div>
 
         <div className="space-y-2">
@@ -266,10 +254,10 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
             <div 
               key={j.id} 
               onClick={() => setSelectedJob(j)}
-              className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-md hover:border-orange-300 transition-all cursor-pointer group"
+              className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md hover:border-slate-400 transition-all cursor-pointer group"
             >
               <div className="flex items-center gap-4 min-w-0">
-                <div className="h-10 w-10 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center shrink-0">
+                <div className="h-10 w-10 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
                   <MapPin size={20} />
                 </div>
                 <div className="min-w-0">
@@ -288,8 +276,8 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
 
       {/* Sectiune Materiale */}
       <section>
-        <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-3 px-1">
-          <Package size={20} className="text-indigo-500" /> Catalog Materiale
+        <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2 mb-3 px-1">
+          <Package size={18} className="text-slate-700" /> Catalog Materiale
         </h2>
         <div className="flex gap-2 mb-4">
            <Input 
@@ -301,15 +289,15 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
            />
            <select 
              value={unit} onChange={e => setUnit(e.target.value)}
-             className="flex-1 bg-white border border-slate-200 rounded-xl px-2 text-sm font-bold text-slate-600 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+             className="flex-1 bg-white border border-slate-300 rounded-xl px-2 text-sm font-bold text-slate-600 outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-500"
            >
              {CONSTRUCTION_UNITS.map(u => <option key={u.value} value={u.value}>{u.label}</option>)}
            </select>
-           <Button size="icon" onClick={() => addData('materials', { name: newMat, unit }, setNewMat)} icon={Plus} className="bg-indigo-600 rounded-xl"/>
+           <Button size="icon" onClick={() => addData('materials', { name: newMat, unit }, setNewMat)} icon={Plus} className="rounded-xl"/>
         </div>
         <div className="flex flex-wrap gap-2">
           {materials.map(m => (
-            <div key={m.id} className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold border border-emerald-100">
+            <div key={m.id} className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold border border-slate-200">
               <span>{m.name} ({m.unit})</span>
               <button onClick={() => requestDelete('materials', m.id, `Ștergi ${m.name}?`)} className="hover:text-red-500 p-1"><Trash2 size={12} /></button>
             </div>
