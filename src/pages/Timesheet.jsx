@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Clock3, Download } from 'lucide-react';
 import { Card, Button } from '../components/UI';
+import { apiClient } from '../lib/apiClient';
 
 const monthKey = (date) => {
   const d = new Date(date);
@@ -12,16 +13,21 @@ const parseHours = (value) => {
   return Number.isFinite(n) ? n : 0;
 };
 
-export default function TimesheetView({ shifts, employees }) {
+export default function TimesheetView({ shifts, employees, updateShiftLocally, showToast }) {
   const [selectedMonth, setSelectedMonth] = useState(monthKey(new Date()));
+  const [savingKey, setSavingKey] = useState('');
 
-  const rows = useMemo(() => {
+  const monthShifts = useMemo(() => {
     const [year, month] = selectedMonth.split('-').map(Number);
 
-    const filtered = shifts.filter((shift) => {
+    return shifts.filter((shift) => {
       const d = new Date(shift.date);
       return d.getFullYear() === year && d.getMonth() + 1 === month;
     });
+  }, [selectedMonth, shifts]);
+
+  const rows = useMemo(() => {
+    const filtered = monthShifts;
 
     return employees.map((employee) => {
       let totalHours = 0;
@@ -46,7 +52,56 @@ export default function TimesheetView({ shifts, employees }) {
         avgHours: workedDays > 0 ? totalHours / workedDays : 0,
       };
     });
-  }, [selectedMonth, shifts, employees]);
+  }, [monthShifts, employees]);
+
+  const entries = useMemo(() => {
+    const list = [];
+    monthShifts.forEach((shift) => {
+      const hoursMap = shift.employeeHours || {};
+      Object.entries(hoursMap).forEach(([employeeId, hours]) => {
+        const employee = employees.find((emp) => emp.id === employeeId);
+        list.push({
+          key: `${shift.id}-${employeeId}`,
+          shiftId: shift.id,
+          employeeId,
+          date: shift.date,
+          jobTitle: shift.jobTitle,
+          employeeName: employee?.name || 'N/A',
+          hours: parseHours(hours),
+        });
+      });
+    });
+
+    return list.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [monthShifts, employees]);
+
+  const handleHoursChange = (entry, value) => {
+    const normalized = Math.max(0, parseHours(value));
+    const shift = shifts.find((item) => item.id === entry.shiftId);
+    if (!shift) return;
+
+    const updatedHours = { ...(shift.employeeHours || {}), [entry.employeeId]: normalized };
+    updateShiftLocally(entry.shiftId, { employeeHours: updatedHours });
+  };
+
+  const saveHours = async (entry, value) => {
+    const normalized = Math.max(0, parseHours(value));
+    const shift = shifts.find((item) => item.id === entry.shiftId);
+    if (!shift) return;
+
+    const updatedHours = { ...(shift.employeeHours || {}), [entry.employeeId]: normalized };
+    const key = `${entry.shiftId}-${entry.employeeId}`;
+    setSavingKey(key);
+    try {
+      await apiClient.updateRecord('shifts', entry.shiftId, { employeeHours: updatedHours });
+      showToast('Pontaj salvat');
+    } catch (error) {
+      console.error(error);
+      showToast('Eroare la salvare pontaj', 'error');
+    } finally {
+      setSavingKey('');
+    }
+  };
 
   const exportCsv = () => {
     const header = ['Angajat', 'Ore totale', 'Zile lucrate', 'Intrari', 'Medie ore/zi'];
@@ -120,6 +175,65 @@ export default function TimesheetView({ shifts, employees }) {
               ))}
             </tbody>
           </table>
+        </div>
+
+        <div className="mt-6">
+          <h3 className="text-sm font-semibold text-slate-800 mb-3">Editare inline pontaj</h3>
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left border-b border-slate-200 text-slate-500 uppercase text-xs tracking-wider">
+                  <th className="py-3">Data</th>
+                  <th className="py-3">Lucrare</th>
+                  <th className="py-3">Angajat</th>
+                  <th className="py-3">Ore</th>
+                  <th className="py-3">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {entries.map((entry) => (
+                  <tr key={entry.key} className="border-b border-slate-100">
+                    <td className="py-2.5">{new Date(entry.date).toLocaleDateString('ro-RO')}</td>
+                    <td className="py-2.5 font-medium text-slate-800">{entry.jobTitle}</td>
+                    <td className="py-2.5">{entry.employeeName}</td>
+                    <td className="py-2.5">
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.5"
+                        value={parseHours(entry.hours)}
+                        onChange={(e) => handleHoursChange(entry, e.target.value)}
+                        onBlur={(e) => saveHours(entry, e.target.value)}
+                        className="w-24 h-9 px-2 border border-slate-300 rounded-lg text-right"
+                      />
+                    </td>
+                    <td className="py-2.5 text-xs text-slate-500">{savingKey === entry.key ? 'Se salvează…' : 'Salvat local'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="md:hidden space-y-2">
+            {entries.map((entry) => (
+              <div key={entry.key} className="border border-slate-200 rounded-xl p-3 space-y-2">
+                <div className="text-xs text-slate-500">{new Date(entry.date).toLocaleDateString('ro-RO')} · {entry.jobTitle}</div>
+                <div className="font-semibold text-slate-800 text-sm">{entry.employeeName}</div>
+                <div className="flex items-center justify-between gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    value={parseHours(entry.hours)}
+                    onChange={(e) => handleHoursChange(entry, e.target.value)}
+                    onBlur={(e) => saveHours(entry, e.target.value)}
+                    className="w-28 h-9 px-2 border border-slate-300 rounded-lg text-right"
+                  />
+                  <span className="text-xs text-slate-500">{savingKey === entry.key ? 'Se salvează…' : 'OK'}</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="md:hidden space-y-2">

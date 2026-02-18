@@ -8,8 +8,8 @@ export const Card = ({ children, className = "", onClick, noPadding = false }) =
   <div 
     onClick={onClick}
     className={cn(
-      "bg-white rounded-2xl border border-slate-200 shadow-sm transition-all duration-200 overflow-hidden",
-      onClick && "cursor-pointer hover:shadow-md hover:border-slate-300",
+      "bg-white/95 backdrop-blur-sm rounded-2xl border border-indigo-100/80 shadow-sm transition-all duration-200 overflow-hidden",
+      onClick && "cursor-pointer hover:shadow-md hover:border-indigo-200",
       !noPadding && "p-5 sm:p-6",
       className
     )}
@@ -22,11 +22,11 @@ export const Button = ({ children, onClick, variant = 'primary', className = "",
   const baseStyle = "relative inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-1";
   
   const variants = {
-    primary: "bg-slate-900 text-white hover:bg-slate-800 focus:ring-slate-400 border border-transparent",
+    primary: "bg-gradient-to-r from-indigo-600 to-purple-700 text-white hover:from-indigo-700 hover:to-purple-800 focus:ring-indigo-400 border border-transparent",
     success: "bg-emerald-600 text-white hover:bg-emerald-700 focus:ring-emerald-500 border border-transparent",
     danger: "bg-rose-600 text-white hover:bg-rose-700 focus:ring-rose-500 border border-transparent",
-    ghost: "text-slate-700 hover:bg-slate-100 hover:text-slate-900 focus:ring-slate-300",
-    outline: "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 hover:border-slate-400 focus:ring-slate-300"
+    ghost: "text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 focus:ring-indigo-300",
+    outline: "bg-white text-slate-700 border border-indigo-200 hover:bg-indigo-50 hover:border-indigo-300 focus:ring-indigo-300"
   };
 
   const sizes = {
@@ -50,7 +50,7 @@ export const Button = ({ children, onClick, variant = 'primary', className = "",
 
 export const Input = ({ value, onChange, onKeyDown, placeholder, type = "text", className = "", icon: Icon, autoFocus }) => (
   <div className="relative w-full flex-1 group min-w-0">
-    {Icon && <Icon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-700 transition-colors" size={18} />}
+    {Icon && <Icon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={18} />}
     <input
       type={type}
       value={value}
@@ -59,8 +59,8 @@ export const Input = ({ value, onChange, onKeyDown, placeholder, type = "text", 
       placeholder={placeholder}
       autoFocus={autoFocus}
       className={cn(
-        "block w-full h-12 appearance-none bg-white border border-slate-300 rounded-xl py-3 text-slate-900 placeholder:text-slate-400 outline-none transition-all duration-200",
-        "focus:border-slate-500 focus:ring-4 focus:ring-slate-900/10",
+        "block w-full h-12 appearance-none bg-white border border-indigo-200 rounded-xl py-3 text-slate-900 placeholder:text-slate-400 outline-none transition-all duration-200",
+        "focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/15",
         Icon ? 'pl-11 pr-4' : 'px-4',
         className
       )}
@@ -70,7 +70,7 @@ export const Input = ({ value, onChange, onKeyDown, placeholder, type = "text", 
 
 export const Spinner = () => (
   <div className="flex justify-center items-center h-64">
-    <Loader2 className="w-10 h-10 text-slate-700 animate-spin" />
+    <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
   </div>
 );
 
@@ -94,7 +94,7 @@ export const ConfirmModal = ({ isOpen, message, onConfirm, onCancel }) => {
   return (
     <div className="fixed inset-0 bg-slate-900/55 backdrop-blur-[2px] z-[80] flex items-center justify-center p-4 animate-fade-in">
       <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-xl scale-100">
-        <div className="w-14 h-14 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-5">
+        <div className="w-14 h-14 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-5 ring-4 ring-rose-50">
           <Trash2 size={26} className="text-rose-700" />
         </div>
         <h3 className="text-xl font-bold mb-2 text-slate-900 text-center">Ești sigur?</h3>
@@ -136,11 +136,11 @@ export const AutoSaveTextarea = ({ value, onSave, disabled, placeholder }) => {
         disabled={disabled}
         value={localValue}
         onChange={handleChange}
-        className="w-full p-4 bg-white border border-slate-300 rounded-2xl text-base min-h-[140px] focus:border-slate-500 focus:ring-4 focus:ring-slate-900/10 outline-none transition-all text-slate-900 placeholder:text-slate-400 resize-none leading-relaxed"
+        className="w-full p-4 bg-white border border-indigo-200 rounded-2xl text-base min-h-[140px] focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/15 outline-none transition-all text-slate-900 placeholder:text-slate-400 resize-none leading-relaxed"
         placeholder={placeholder}
       />
       {isSaving && (
-        <div className="absolute bottom-4 right-4 text-xs font-bold text-slate-700 flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-full">
+        <div className="absolute bottom-4 right-4 text-xs font-bold text-indigo-700 flex items-center gap-1.5 bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-100">
           <Loader2 size={12} className="animate-spin" /> Salvăm...
         </div>
       )}

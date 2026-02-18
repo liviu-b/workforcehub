@@ -29,6 +29,7 @@ model Employee {
   name       String
   phone      String?
   hire_date  String?
+  hourlyRate Float    @default(0)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }
@@ -40,6 +41,8 @@ model Job {
   location   String?
   start_date String?
   manager    String?
+  estimatedLaborCost    Float    @default(0)
+  estimatedMaterialCost Float    @default(0)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }
@@ -49,6 +52,7 @@ model Material {
   app_id    String
   name      String
   unit      String
+  unitCost  Float    @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

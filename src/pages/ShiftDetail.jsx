@@ -4,13 +4,53 @@ import { Card, Button, AutoSaveTextarea } from '../components/UI';
 import { formatDate, generatePDF } from '../utils/helpers';
 import { apiClient } from '../lib/apiClient';
 
-export default function ShiftDetailView({ shift, activeShiftId, setView, requestDelete, employees, materials, updateShiftLocally, showToast, user, userName, fetchData }) {
+const parseNumber = (value) => {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : 0;
+};
+
+export default function ShiftDetailView({ shift, activeShiftId, setView, requestDelete, employees, materials, jobs, allShifts, updateShiftLocally, showToast, user, userName, fetchData }) {
   // Dacă nu există date, nu randăm nimic sau putem pune un loader
   if (!shift) return null;
 
   const [newTaskText, setNewTaskText] = React.useState('');
 
   const isApproved = shift.status === 'approved';
+  const currentJob = jobs.find((job) => job.id === shift.jobId);
+
+  const getShiftCosts = (targetShift) => {
+    const employeeHours = targetShift.employeeHours || {};
+    const laborCost = Object.entries(employeeHours).reduce((sum, [employeeId, hours]) => {
+      const employee = employees.find((emp) => emp.id === employeeId);
+      return sum + parseNumber(hours) * parseNumber(employee?.hourlyRate);
+    }, 0);
+
+    const materialCost = (targetShift.materialUsage || []).reduce((sum, usage) => {
+      const material = materials.find((mat) => mat.id === usage.materialId);
+      return sum + parseNumber(usage.quantity) * parseNumber(material?.unitCost);
+    }, 0);
+
+    return {
+      laborCost,
+      materialCost,
+      total: laborCost + materialCost,
+    };
+  };
+
+  const currentShiftCosts = getShiftCosts(shift);
+  const relatedShifts = allShifts.filter((item) => item.jobId === shift.jobId);
+  const jobActualCosts = relatedShifts.reduce((acc, item) => {
+    const itemCosts = getShiftCosts(item);
+    return {
+      laborCost: acc.laborCost + itemCosts.laborCost,
+      materialCost: acc.materialCost + itemCosts.materialCost,
+      total: acc.total + itemCosts.total,
+    };
+  }, { laborCost: 0, materialCost: 0, total: 0 });
+
+  const estimatedLabor = parseNumber(currentJob?.estimatedLaborCost);
+  const estimatedMaterials = parseNumber(currentJob?.estimatedMaterialCost);
+  const estimatedTotal = estimatedLabor + estimatedMaterials;
 
   // --- FUNCȚII DE UPDATE (Logica de bază) ---
 
@@ -319,6 +359,32 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
             onSave={(val) => updateShift('notes', val)}
             placeholder="Scrie aici observații, probleme întâmpinate sau starea vremii..."
           />
+        </Card>
+
+        <Card>
+          <h3 className="font-semibold text-slate-900 mb-4 text-sm">Costuri Lucrare</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="border border-slate-200 rounded-xl p-3 bg-slate-50">
+              <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Raport curent</p>
+              <div className="mt-2 text-sm text-slate-700 space-y-1">
+                <p>Manoperă: <span className="font-semibold text-slate-900">{currentShiftCosts.laborCost.toFixed(2)} RON</span></p>
+                <p>Materiale: <span className="font-semibold text-slate-900">{currentShiftCosts.materialCost.toFixed(2)} RON</span></p>
+                <p>Total: <span className="font-bold text-slate-900">{currentShiftCosts.total.toFixed(2)} RON</span></p>
+              </div>
+            </div>
+
+            <div className="border border-slate-200 rounded-xl p-3 bg-white">
+              <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Lucrare (estimat vs real)</p>
+              <div className="mt-2 text-sm text-slate-700 space-y-1">
+                <p>Estimare totală: <span className="font-semibold text-slate-900">{estimatedTotal.toFixed(2)} RON</span></p>
+                <p>Real total: <span className="font-semibold text-slate-900">{jobActualCosts.total.toFixed(2)} RON</span></p>
+                <p>Diferență: <span className={`font-bold ${jobActualCosts.total > estimatedTotal ? 'text-rose-600' : 'text-emerald-600'}`}>{(jobActualCosts.total - estimatedTotal).toFixed(2)} RON</span></p>
+              </div>
+            </div>
+          </div>
+          <p className="text-xs text-slate-500 mt-3">
+            Estimarea vine din setările lucrării, iar costul real se calculează din ore x tarif angajat + consum materiale x cost unitar.
+          </p>
         </Card>
         <p className="text-center text-[10px] text-slate-300 pt-6">Power by ACL-Smart Software</p>
       </div>

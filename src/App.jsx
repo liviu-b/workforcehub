@@ -185,17 +185,17 @@ export default function App() {
     }
   };
 
-  if (loading) return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><Spinner /></div>;
-  if (!user) return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500 font-medium">Se conectează...</div>;
+  if (loading) return <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center"><Spinner /></div>;
+  if (!user) return <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center text-slate-500 font-medium">Se conectează...</div>;
 
   return (
-    <div className="min-h-screen bg-slate-100 font-sans text-slate-900 selection:bg-slate-300 selection:text-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-slate-50 to-purple-50 font-sans text-slate-900 selection:bg-indigo-200 selection:text-slate-900">
       {showWelcome && <WelcomeScreen onFinished={() => setShowWelcome(false)} />}
       
       <Toast message={toast.message} type={toast.type} onClose={() => setToast({message:'', type:''})} />
       <ConfirmModal isOpen={confirmData.isOpen} message={confirmData.message} onConfirm={confirmData.action} onCancel={() => setConfirmData({ isOpen: false, message: '', action: null })} />
       
-      <div className={`max-w-7xl mx-auto min-h-screen relative bg-white shadow-sm ${view !== 'shift-detail' ? 'lg:grid lg:grid-cols-[240px_1fr] lg:border-x lg:border-slate-200' : ''}`}>
+      <div className={`max-w-7xl mx-auto min-h-screen relative bg-white/95 backdrop-blur-sm shadow-sm ${view !== 'shift-detail' ? 'lg:grid lg:grid-cols-[240px_1fr] lg:border-x lg:border-indigo-100' : ''}`}>
         {view !== 'shift-detail' && <DesktopNav currentView={view} setView={setView} />}
 
         <div className="p-6 animate-fade-in"> 
@@ -227,6 +227,8 @@ export default function App() {
               <TimesheetView
                 shifts={shifts}
                 employees={employees}
+                updateShiftLocally={updateShiftLocally}
+                showToast={showToast}
               />
             </div>
           }
@@ -253,7 +255,7 @@ export default function App() {
               <ShiftDetailView 
                 shift={shifts.find(s => s.id === activeShiftId)} 
                 activeShiftId={activeShiftId} setView={setView} requestDelete={requestDelete}
-                employees={employees} materials={materials} updateShiftLocally={updateShiftLocally}
+                employees={employees} materials={materials} jobs={jobs} allShifts={shifts} updateShiftLocally={updateShiftLocally}
                 showToast={showToast} user={user} userName={userName} fetchData={fetchData}
               />
             </div>

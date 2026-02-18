@@ -11,7 +11,7 @@ export const MobileNav = ({ currentView, setView }) => {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 pb-safe pt-2 z-50 lg:hidden">
+    <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-indigo-100 pb-safe pt-2 z-50 lg:hidden">
       <div className="flex justify-around items-center h-16 max-w-lg mx-auto">
         {navItems.map((item) => {
           const isActive = currentView === item.id;
@@ -23,14 +23,14 @@ export const MobileNav = ({ currentView, setView }) => {
             >
               <div className={`relative p-2 rounded-2xl transition-all duration-300 ${
                 isActive 
-                  ? 'bg-slate-900 text-white' 
-                  : 'text-slate-500 group-hover:text-slate-700'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-700 text-white shadow-sm' 
+                  : 'text-slate-500 group-hover:text-indigo-700'
               }`}>
                 <item.icon size={22} strokeWidth={2.2} />
               </div>
               
               <span className={`text-[10px] mt-1 font-bold transition-all duration-300 ${
-                isActive ? 'text-slate-900 opacity-100' : 'text-slate-400 opacity-80'
+                isActive ? 'text-indigo-700 opacity-100' : 'text-slate-400 opacity-80'
               }`}>
                 {item.label}
               </span>

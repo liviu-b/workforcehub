@@ -4,12 +4,18 @@ import { Card, Input, Button } from '../components/UI';
 import { CONSTRUCTION_UNITS, APP_ID } from '../constants';
 import { apiClient } from '../lib/apiClient';
 
+const parseNumber = (value) => {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : 0;
+};
+
 // --- COMPONENTA EDITARE ANGAJAT ---
 const EmployeeEditModal = ({ employee, shifts, onClose, onSave, onDelete }) => {
   const [formData, setFormData] = useState({
     name: employee.name || '',
     phone: employee.phone || '',
-    hire_date: employee.hire_date || ''
+    hire_date: employee.hire_date || '',
+    hourlyRate: employee.hourlyRate ?? 0,
   });
 
 
@@ -52,6 +58,10 @@ const EmployeeEditModal = ({ employee, shifts, onClose, onSave, onDelete }) => {
                 <label className="text-xs font-bold text-slate-500 uppercase ml-1">Data Angajării</label>
                 <Input type="date" value={formData.hire_date} onChange={e => setFormData({...formData, hire_date: e.target.value})} icon={Calendar} />
              </div>
+             <div>
+               <label className="text-xs font-bold text-slate-500 uppercase ml-1">Tarif / Oră (RON)</label>
+               <Input type="number" min="0" step="0.5" value={formData.hourlyRate} onChange={e => setFormData({...formData, hourlyRate: e.target.value})} icon={Clock} />
+             </div>
           </div>
 
           {/* Istoric Ore */}
@@ -87,7 +97,9 @@ const JobEditModal = ({ job, onClose, onSave, onDelete }) => {
     title: job.title || '',
     location: job.location || '',
     start_date: job.start_date || '',
-    manager: job.manager || ''
+    manager: job.manager || '',
+    estimatedLaborCost: job.estimatedLaborCost ?? 0,
+    estimatedMaterialCost: job.estimatedMaterialCost ?? 0,
   });
 
   return (
@@ -121,6 +133,16 @@ const JobEditModal = ({ job, onClose, onSave, onDelete }) => {
                   <Input value={formData.manager} onChange={e => setFormData({...formData, manager: e.target.value})} placeholder="Nume..." icon={User} />
                </div>
              </div>
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase ml-1">Estimare Manoperă (RON)</label>
+                  <Input type="number" min="0" step="1" value={formData.estimatedLaborCost} onChange={e => setFormData({...formData, estimatedLaborCost: e.target.value})} icon={Clock} />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase ml-1">Estimare Materiale (RON)</label>
+                  <Input type="number" min="0" step="1" value={formData.estimatedMaterialCost} onChange={e => setFormData({...formData, estimatedMaterialCost: e.target.value})} icon={Package} />
+                </div>
+               </div>
           </div>
 
           <div className="flex gap-3 pt-4">
@@ -139,10 +161,42 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
   const [newJob, setNewJob] = useState('');
   const [newMat, setNewMat] = useState('');
   const [unit, setUnit] = useState('buc');
+  const [unitCost, setUnitCost] = useState('');
 
   // State pentru modale
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [selectedJob, setSelectedJob] = useState(null);
+
+  const actualJobCosts = useMemo(() => {
+    const byId = {};
+    const employeeRateMap = employees.reduce((acc, emp) => {
+      acc[emp.id] = parseNumber(emp.hourlyRate);
+      return acc;
+    }, {});
+    const materialCostMap = materials.reduce((acc, mat) => {
+      acc[mat.id] = parseNumber(mat.unitCost);
+      return acc;
+    }, {});
+
+    shifts.forEach((shift) => {
+      if (!shift.jobId) return;
+      if (!byId[shift.jobId]) {
+        byId[shift.jobId] = { labor: 0, materials: 0 };
+      }
+
+      const employeeHours = shift.employeeHours || {};
+      Object.entries(employeeHours).forEach(([employeeId, hours]) => {
+        byId[shift.jobId].labor += parseNumber(hours) * (employeeRateMap[employeeId] || 0);
+      });
+
+      const materialUsage = shift.materialUsage || [];
+      materialUsage.forEach((usage) => {
+        byId[shift.jobId].materials += parseNumber(usage.quantity) * (materialCostMap[usage.materialId] || 0);
+      });
+    });
+
+    return byId;
+  }, [shifts, employees, materials]);
 
   const addData = async (tableName, data, resetFn) => {
     if (!data.name && !data.title) return;
@@ -161,10 +215,24 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
   };
 
   const updateData = async (tableName, id, updates, stateSetter) => {
-    try {
-      await apiClient.updateRecord(tableName, id, updates);
+    const normalizedUpdates = { ...updates };
+    if (Object.prototype.hasOwnProperty.call(normalizedUpdates, 'hourlyRate')) {
+      normalizedUpdates.hourlyRate = parseNumber(normalizedUpdates.hourlyRate);
+    }
+    if (Object.prototype.hasOwnProperty.call(normalizedUpdates, 'estimatedLaborCost')) {
+      normalizedUpdates.estimatedLaborCost = parseNumber(normalizedUpdates.estimatedLaborCost);
+    }
+    if (Object.prototype.hasOwnProperty.call(normalizedUpdates, 'estimatedMaterialCost')) {
+      normalizedUpdates.estimatedMaterialCost = parseNumber(normalizedUpdates.estimatedMaterialCost);
+    }
+    if (Object.prototype.hasOwnProperty.call(normalizedUpdates, 'unitCost')) {
+      normalizedUpdates.unitCost = parseNumber(normalizedUpdates.unitCost);
+    }
 
-      stateSetter(prev => prev.map(item => item.id === id ? { ...item, ...updates } : item));
+    try {
+      await apiClient.updateRecord(tableName, id, normalizedUpdates);
+
+      stateSetter(prev => prev.map(item => item.id === id ? { ...item, ...normalizedUpdates } : item));
       showToast('Actualizat cu succes!');
       setSelectedEmployee(null);
       setSelectedJob(null);
@@ -203,11 +271,11 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
           <Input 
             value={newEmp} 
             onChange={e => setNewEmp(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && addData('employees', { name: newEmp }, setNewEmp)}
+            onKeyDown={e => e.key === 'Enter' && addData('employees', { name: newEmp, hourlyRate: 0 }, setNewEmp)}
             placeholder="Nume nou..." 
             className="flex-1"
           />
-          <Button size="icon" onClick={() => addData('employees', { name: newEmp }, setNewEmp)} icon={Plus} className="rounded-xl"/>
+          <Button size="icon" onClick={() => addData('employees', { name: newEmp, hourlyRate: 0 }, setNewEmp)} icon={Plus} className="rounded-xl"/>
         </div>
         
         <div className="grid grid-cols-2 gap-3">
@@ -226,6 +294,7 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
                 <p className="text-xs text-slate-400 font-medium truncate mt-0.5">
                    {e.phone || 'Fără telefon'}
                 </p>
+                <p className="text-[11px] text-slate-600 font-semibold mt-1">{parseNumber(e.hourlyRate).toFixed(2)} RON/h</p>
               </div>
             </div>
           ))}
@@ -242,15 +311,23 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
           <Input 
             value={newJob} 
             onChange={e => setNewJob(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && addData('jobs', { title: newJob }, setNewJob)}
+            onKeyDown={e => e.key === 'Enter' && addData('jobs', { title: newJob, estimatedLaborCost: 0, estimatedMaterialCost: 0 }, setNewJob)}
             placeholder="Lucrare nouă..." 
             className="flex-1"
           />
-          <Button size="icon" onClick={() => addData('jobs', { title: newJob }, setNewJob)} icon={Plus} className="rounded-xl"/>
+          <Button size="icon" onClick={() => addData('jobs', { title: newJob, estimatedLaborCost: 0, estimatedMaterialCost: 0 }, setNewJob)} icon={Plus} className="rounded-xl"/>
         </div>
 
         <div className="space-y-2">
           {jobs.map(j => (
+            (() => {
+              const actual = actualJobCosts[j.id] || { labor: 0, materials: 0 };
+              const estimatedLabor = parseNumber(j.estimatedLaborCost);
+              const estimatedMaterials = parseNumber(j.estimatedMaterialCost);
+              const estimatedTotal = estimatedLabor + estimatedMaterials;
+              const actualTotal = actual.labor + actual.materials;
+
+              return (
             <div 
               key={j.id} 
               onClick={() => setSelectedJob(j)}
@@ -266,9 +343,16 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
                     {j.location ? <span>{j.location}</span> : <span className="italic">Fără locație</span>}
                     {j.manager && <span className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 font-medium">Resp: {j.manager}</span>}
                   </div>
+                  <div className="text-xs mt-1.5">
+                    <span className="text-slate-500">Estimat:</span> <span className="font-semibold text-slate-700">{estimatedTotal.toFixed(0)} RON</span>
+                    <span className="text-slate-400"> · </span>
+                    <span className="text-slate-500">Real:</span> <span className="font-semibold text-slate-900">{actualTotal.toFixed(0)} RON</span>
+                  </div>
                 </div>
               </div>
             </div>
+              );
+            })()
           ))}
         </div>
         {jobs.length === 0 && <div className="text-center p-4 text-slate-400 text-sm italic">Adaugă lucrări active.</div>}
@@ -283,7 +367,7 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
            <Input 
              value={newMat} 
              onChange={e => setNewMat(e.target.value)}
-             onKeyDown={e => e.key === 'Enter' && addData('materials', { name: newMat, unit }, setNewMat)}
+             onKeyDown={e => e.key === 'Enter' && addData('materials', { name: newMat, unit, unitCost: parseNumber(unitCost) }, setNewMat)}
              placeholder="Material..." 
              className="flex-[2]"
            />
@@ -293,12 +377,37 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
            >
              {CONSTRUCTION_UNITS.map(u => <option key={u.value} value={u.value}>{u.label}</option>)}
            </select>
-           <Button size="icon" onClick={() => addData('materials', { name: newMat, unit }, setNewMat)} icon={Plus} className="rounded-xl"/>
+           <Input
+             type="number"
+             min="0"
+             step="0.1"
+             value={unitCost}
+             onChange={e => setUnitCost(e.target.value)}
+             placeholder="RON/u"
+             className="w-24"
+           />
+           <Button size="icon" onClick={() => {
+             addData('materials', { name: newMat, unit, unitCost: parseNumber(unitCost) }, setNewMat);
+             setUnitCost('');
+           }} icon={Plus} className="rounded-xl"/>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="space-y-2">
           {materials.map(m => (
-            <div key={m.id} className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold border border-slate-200">
-              <span>{m.name} ({m.unit})</span>
+            <div key={m.id} className="flex items-center gap-2 px-3 py-2 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold border border-slate-200">
+              <span className="flex-1">{m.name} ({m.unit})</span>
+              <input
+                type="number"
+                min="0"
+                step="0.1"
+                value={parseNumber(m.unitCost)}
+                onChange={(e) => {
+                  const val = parseNumber(e.target.value);
+                  setMaterials(prev => prev.map(item => item.id === m.id ? { ...item, unitCost: val } : item));
+                }}
+                onBlur={(e) => updateData('materials', m.id, { unitCost: e.target.value }, setMaterials)}
+                className="w-24 h-8 px-2 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-right"
+              />
+              <span className="text-slate-500">RON/u</span>
               <button onClick={() => requestDelete('materials', m.id, `Ștergi ${m.name}?`)} className="hover:text-red-500 p-1"><Trash2 size={12} /></button>
             </div>
           ))}
