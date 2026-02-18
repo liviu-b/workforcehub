@@ -8,6 +8,8 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
   // Dacă nu există date, nu randăm nimic sau putem pune un loader
   if (!shift) return null;
 
+  const [newTaskText, setNewTaskText] = React.useState('');
+
   const isApproved = shift.status === 'approved';
 
   // --- FUNCȚII DE UPDATE (Logica de bază) ---
@@ -71,6 +73,30 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
       showToast('Eroare la salvare', 'error');
       fetchData();
     }
+  };
+
+  const addTask = async () => {
+    const text = newTaskText.trim();
+    if (!text) return;
+
+    const current = shift.taskChecklist || [];
+    const updated = [...current, { id: `${Date.now()}`, label: text, done: false }];
+    await updateShift('taskChecklist', updated);
+    setNewTaskText('');
+  };
+
+  const toggleTask = async (taskId) => {
+    const current = shift.taskChecklist || [];
+    const updated = current.map((task) => (
+      task.id === taskId ? { ...task, done: !task.done } : task
+    ));
+    await updateShift('taskChecklist', updated);
+  };
+
+  const removeTask = async (taskId) => {
+    const current = shift.taskChecklist || [];
+    const updated = current.filter((task) => task.id !== taskId);
+    await updateShift('taskChecklist', updated);
   };
 
   // --- FUNCȚIA DE APROBARE + NOTIFICARE EMAIL ---
@@ -241,6 +267,47 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
                 )
              })}
              {(!shift.materialUsage?.length) && <div className="text-center py-4 text-slate-400 text-sm">Niciun material adăugat.</div>}
+          </div>
+        </Card>
+
+        <Card className={isApproved ? 'opacity-60 pointer-events-none' : ''}>
+          <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2 text-sm">
+            <div className="bg-slate-100 p-1.5 rounded-lg text-slate-700"><CheckCircle size={16}/></div> Checklist Lucrări
+          </h3>
+
+          {!isApproved && (
+            <div className="flex gap-2 mb-4">
+              <input
+                value={newTaskText}
+                onChange={(e) => setNewTaskText(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && addTask()}
+                placeholder="Adaugă pas de lucru..."
+                className="flex-1 h-11 px-3 bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-500"
+              />
+              <Button size="icon" onClick={addTask} icon={Plus} />
+            </div>
+          )}
+
+          <div className="space-y-2">
+            {(shift.taskChecklist || []).map((task) => (
+              <div key={task.id} className="flex items-center gap-3 p-3 border border-slate-200 rounded-xl bg-white">
+                <button
+                  onClick={() => toggleTask(task.id)}
+                  className={`h-5 w-5 rounded-md border flex items-center justify-center ${task.done ? 'bg-slate-900 border-slate-900 text-white' : 'border-slate-300 text-transparent'}`}
+                >
+                  <CheckCircle size={12} />
+                </button>
+                <p className={`flex-1 text-sm ${task.done ? 'text-slate-400 line-through' : 'text-slate-700'}`}>{task.label}</p>
+                {!isApproved && (
+                  <button onClick={() => removeTask(task.id)} className="text-slate-400 hover:text-rose-600">
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
+            ))}
+            {(shift.taskChecklist || []).length === 0 && (
+              <div className="text-center py-4 text-slate-400 text-sm">Nu există task-uri încă.</div>
+            )}
           </div>
         </Card>
 

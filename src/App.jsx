@@ -5,12 +5,15 @@ import { Zap } from 'lucide-react';
 // Components
 import { Spinner, Toast, ConfirmModal } from './components/UI';
 import { MobileNav } from './components/MobileNav';
+import { DesktopNav } from './components/DesktopNav';
 
 // Pages
 import Dashboard from './pages/Dashboard';
 import ManageView from './pages/Manage';
 import ReportsView from './pages/Reports';
 import ShiftDetailView from './pages/ShiftDetail';
+import CalendarView from './pages/Calendar';
+import TimesheetView from './pages/Timesheet';
 
 // Constants
 import { APP_ID } from './constants';
@@ -149,20 +152,22 @@ export default function App() {
     });
   };
 
-  const handleCreateShift = async (jobId) => {
+  const handleCreateShift = async (jobId, plannedDate = null) => {
     if (!user) return;
     const job = jobs.find(j => j.id === jobId);
+    const shiftDate = plannedDate || new Date().toISOString();
     try {
       const newShift = {
         app_id: APP_ID,
         jobId,
         jobTitle: job?.title || 'Lucrare necunoscută',
-        date: new Date().toISOString(),
+        date: shiftDate,
         status: 'open',
         progress: 0,
         assignedEmployeeIds: [],
         employeeHours: {},
         materialUsage: [],
+        taskChecklist: [],
         notes: '',
         createdAt: new Date().toISOString(),
         createdBy: user.id,
@@ -190,7 +195,9 @@ export default function App() {
       <Toast message={toast.message} type={toast.type} onClose={() => setToast({message:'', type:''})} />
       <ConfirmModal isOpen={confirmData.isOpen} message={confirmData.message} onConfirm={confirmData.action} onCancel={() => setConfirmData({ isOpen: false, message: '', action: null })} />
       
-      <div className="max-w-lg mx-auto min-h-screen relative bg-white sm:border-x sm:border-slate-200 shadow-sm">
+      <div className={`max-w-7xl mx-auto min-h-screen relative bg-white shadow-sm ${view !== 'shift-detail' ? 'lg:grid lg:grid-cols-[240px_1fr] lg:border-x lg:border-slate-200' : ''}`}>
+        {view !== 'shift-detail' && <DesktopNav currentView={view} setView={setView} />}
+
         <div className="p-6 animate-fade-in"> 
           
           {view === 'dashboard' && 
@@ -199,6 +206,27 @@ export default function App() {
                 shifts={shifts} user={user} userName={userName} setUserName={setUserName} 
                 setActiveShiftId={setActiveShiftId} setView={setView} requestDelete={requestDelete} 
                 handleCreateShift={handleCreateShift} jobs={jobs} showToast={showToast}
+              />
+            </div>
+          }
+
+          {view === 'calendar' &&
+            <div className="animate-slide-up">
+              <CalendarView
+                shifts={shifts}
+                jobs={jobs}
+                handleCreateShift={handleCreateShift}
+                setActiveShiftId={setActiveShiftId}
+                setView={setView}
+              />
+            </div>
+          }
+
+          {view === 'timesheet' &&
+            <div className="animate-slide-up">
+              <TimesheetView
+                shifts={shifts}
+                employees={employees}
               />
             </div>
           }

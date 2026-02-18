@@ -24,6 +24,11 @@ export const generatePDF = (shift, employees, materials) => {
     return m ? { name: m.name, unit: m.unit, quantity: u.quantity } : null;
   }).filter(Boolean) || [];
 
+  const taskList = (shift.taskChecklist || []).map(task => ({
+    label: task.label,
+    done: !!task.done,
+  }));
+
   const htmlContent = `
     <!DOCTYPE html>
     <html>
@@ -80,6 +85,16 @@ export const generatePDF = (shift, employees, materials) => {
           <tbody>
             ${matList.map(m => `<tr><td>${m.name}</td><td>${m.quantity} ${m.unit}</td></tr>`).join('')}
             ${matList.length === 0 ? '<tr><td colspan="2" style="text-align:center;color:#999">Fără materiale</td></tr>' : ''}
+          </tbody>
+        </table>
+      </div>
+      <div class="section">
+        <div class="section-title">Checklist (${taskList.length})</div>
+        <table>
+          <thead><tr><th>Task</th><th>Status</th></tr></thead>
+          <tbody>
+            ${taskList.map(t => `<tr><td>${t.label}</td><td>${t.done ? 'Finalizat' : 'Necompletat'}</td></tr>`).join('')}
+            ${taskList.length === 0 ? '<tr><td colspan="2" style="text-align:center;color:#999">Fără task-uri</td></tr>' : ''}
           </tbody>
         </table>
       </div>

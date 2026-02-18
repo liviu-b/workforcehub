@@ -1,15 +1,17 @@
 import React from 'react';
-import { LayoutGrid, ClipboardCheck, Settings } from 'lucide-react'; // Am schimbat Briefcase cu Settings pentru Admin
+import { LayoutGrid, ClipboardCheck, Settings, CalendarDays, Clock3 } from 'lucide-react';
 
 export const MobileNav = ({ currentView, setView }) => {
   const navItems = [
     { id: 'dashboard', icon: LayoutGrid, label: 'Azi' },
+    { id: 'calendar', icon: CalendarDays, label: 'Calendar' },
+    { id: 'timesheet', icon: Clock3, label: 'Ore' },
     { id: 'shifts', icon: ClipboardCheck, label: 'Rapoarte' },
-    { id: 'manage', icon: Settings, label: 'Admin' }, // Iconita Settings e mai potrivita
+    { id: 'manage', icon: Settings, label: 'Admin' },
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 pb-safe pt-2 z-50">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 pb-safe pt-2 z-50 lg:hidden">
       <div className="flex justify-around items-center h-16 max-w-lg mx-auto">
         {navItems.map((item) => {
           const isActive = currentView === item.id;

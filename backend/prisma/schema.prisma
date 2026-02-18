@@ -64,6 +64,7 @@ model Shift {
   assignedEmployeeIds Json
   employeeHours       Json
   materialUsage       Json
+  taskChecklist       Json?
   notes               String
   approvedAt          String?
   approvedBy          String?
