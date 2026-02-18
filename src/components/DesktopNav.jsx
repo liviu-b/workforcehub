@@ -11,9 +11,9 @@ const items = [
 
 export const DesktopNav = ({ currentView, setView }) => {
   return (
-    <aside className="hidden lg:flex flex-col border-r border-indigo-100 bg-gradient-to-b from-indigo-50/80 via-white to-purple-50/70 min-h-screen p-5">
+    <aside className="hidden lg:flex flex-col border-r border-slate-200 bg-gradient-to-b from-slate-100 via-slate-50 to-slate-100 min-h-screen p-5">
       <div className="mb-8">
-        <p className="text-xs uppercase tracking-widest text-indigo-500 font-semibold">WorkforceHub</p>
+        <p className="text-xs uppercase tracking-widest text-slate-500 font-semibold">WorkforceHub</p>
         <h2 className="text-2xl font-bold text-slate-900 mt-2">Control Center</h2>
       </div>
 
@@ -29,7 +29,7 @@ export const DesktopNav = ({ currentView, setView }) => {
               className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl border transition-all text-left ${
                 active
                   ? 'bg-gradient-to-r from-indigo-600 to-purple-700 text-white border-indigo-600 shadow-sm'
-                  : 'bg-white/80 text-slate-700 border-transparent hover:bg-indigo-50 hover:border-indigo-200'
+                  : 'bg-slate-50 text-slate-700 border-transparent hover:bg-slate-100 hover:border-slate-300'
               }`}
             >
               <Icon size={18} />

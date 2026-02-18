@@ -15,7 +15,6 @@ const EmployeeEditModal = ({ employee, shifts, onClose, onSave, onDelete }) => {
     name: employee.name || '',
     phone: employee.phone || '',
     hire_date: employee.hire_date || '',
-    hourlyRate: employee.hourlyRate ?? 0,
   });
 
 
@@ -57,10 +56,6 @@ const EmployeeEditModal = ({ employee, shifts, onClose, onSave, onDelete }) => {
              <div>
                 <label className="text-xs font-bold text-slate-500 uppercase ml-1">Data Angajării</label>
                 <Input type="date" value={formData.hire_date} onChange={e => setFormData({...formData, hire_date: e.target.value})} icon={Calendar} />
-             </div>
-             <div>
-               <label className="text-xs font-bold text-slate-500 uppercase ml-1">Tarif / Oră (RON)</label>
-               <Input type="number" min="0" step="0.5" value={formData.hourlyRate} onChange={e => setFormData({...formData, hourlyRate: e.target.value})} icon={Clock} />
              </div>
           </div>
 
@@ -271,30 +266,29 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
           <Input 
             value={newEmp} 
             onChange={e => setNewEmp(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && addData('employees', { name: newEmp, hourlyRate: 0 }, setNewEmp)}
+            onKeyDown={e => e.key === 'Enter' && addData('employees', { name: newEmp }, setNewEmp)}
             placeholder="Nume nou..." 
             className="flex-1"
           />
-          <Button size="icon" onClick={() => addData('employees', { name: newEmp, hourlyRate: 0 }, setNewEmp)} icon={Plus} className="rounded-xl"/>
+          <Button size="icon" onClick={() => addData('employees', { name: newEmp }, setNewEmp)} icon={Plus} className="rounded-xl"/>
         </div>
         
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2.5">
           {employees.map(e => (
             <div 
               key={e.id} 
               onClick={() => setSelectedEmployee(e)}
-              className="group bg-white border border-indigo-100 p-3 rounded-2xl shadow-sm hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer relative overflow-hidden"
+              className="group bg-white border border-indigo-100 px-2.5 py-2 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer relative overflow-hidden"
             >
-              <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-100 rounded-bl-full -mr-8 -mt-8 transition-colors group-hover:bg-purple-100"></div>
+              <div className="absolute top-0 right-0 w-12 h-12 bg-indigo-100 rounded-bl-full -mr-6 -mt-6 transition-colors group-hover:bg-purple-100"></div>
               <div className="relative z-10">
-                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-600 to-purple-700 text-white flex items-center justify-center font-bold text-lg mb-2">
+                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-600 to-purple-700 text-white flex items-center justify-center font-bold text-sm mb-1.5">
                    {e.name.charAt(0)}
                 </div>
-                <p className="font-bold text-slate-800 truncate">{e.name}</p>
-                <p className="text-xs text-slate-400 font-medium truncate mt-0.5">
+                <p className="font-semibold text-slate-800 truncate text-sm leading-tight">{e.name}</p>
+                <p className="text-[11px] text-slate-500 font-medium truncate mt-0.5 leading-tight">
                    {e.phone || 'Fără telefon'}
                 </p>
-                <p className="text-[11px] text-slate-600 font-semibold mt-1">{parseNumber(e.hourlyRate).toFixed(2)} RON/h</p>
               </div>
             </div>
           ))}
@@ -331,19 +325,19 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
             <div 
               key={j.id} 
               onClick={() => setSelectedJob(j)}
-              className="flex items-center justify-between p-4 bg-white border border-indigo-100 rounded-2xl shadow-sm hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer group"
+              className="flex items-center justify-between p-3 bg-white border border-indigo-100 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer group"
             >
-              <div className="flex items-center gap-4 min-w-0">
-                <div className="h-10 w-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
-                  <MapPin size={20} />
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="h-9 w-9 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+                  <MapPin size={18} />
                 </div>
                 <div className="min-w-0">
-                  <p className="font-bold text-slate-800 truncate">{j.title}</p>
+                  <p className="font-semibold text-slate-800 truncate">{j.title}</p>
                   <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
                     {j.location ? <span>{j.location}</span> : <span className="italic">Fără locație</span>}
                     {j.manager && <span className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 font-medium">Resp: {j.manager}</span>}
                   </div>
-                  <div className="text-xs mt-1.5">
+                  <div className="text-[11px] mt-1">
                     <span className="text-slate-500">Estimat:</span> <span className="font-semibold text-slate-700">{estimatedTotal.toFixed(0)} RON</span>
                     <span className="text-slate-400"> · </span>
                     <span className="text-slate-500">Real:</span> <span className="font-semibold text-slate-900">{actualTotal.toFixed(0)} RON</span>

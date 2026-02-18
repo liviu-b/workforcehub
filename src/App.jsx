@@ -182,17 +182,17 @@ export default function App() {
     }
   };
 
-  if (loading) return <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-indigo-50 flex items-center justify-center"><Spinner /></div>;
-  if (!user) return <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-indigo-50 flex items-center justify-center text-slate-500 font-medium">Se conectează...</div>;
+  if (loading) return <div className="min-h-screen bg-gradient-to-br from-slate-300 via-slate-200 to-slate-300 flex items-center justify-center"><Spinner /></div>;
+  if (!user) return <div className="min-h-screen bg-gradient-to-br from-slate-300 via-slate-200 to-slate-300 flex items-center justify-center text-slate-600 font-medium">Se conectează...</div>;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-violet-50 to-purple-100 font-sans text-slate-900 selection:bg-indigo-200 selection:text-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-300 via-slate-200 to-slate-300 font-sans text-slate-900 selection:bg-slate-400 selection:text-slate-900">
       {showWelcome && <WelcomeScreen onFinished={() => setShowWelcome(false)} />}
       
       <Toast message={toast.message} type={toast.type} onClose={() => setToast({message:'', type:''})} />
       <ConfirmModal isOpen={confirmData.isOpen} message={confirmData.message} onConfirm={confirmData.action} onCancel={() => setConfirmData({ isOpen: false, message: '', action: null })} />
       
-      <div className={`max-w-7xl mx-auto min-h-screen relative bg-gradient-to-br from-white/95 via-indigo-50/70 to-purple-50/80 backdrop-blur-sm shadow-sm ${view !== 'shift-detail' ? 'lg:grid lg:grid-cols-[240px_1fr] lg:border-x lg:border-indigo-100' : ''}`}>
+      <div className={`max-w-7xl mx-auto min-h-screen relative bg-gradient-to-br from-slate-100/95 via-slate-100/90 to-slate-200/95 backdrop-blur-sm shadow-sm ${view !== 'shift-detail' ? 'lg:grid lg:grid-cols-[240px_1fr] lg:border-x lg:border-slate-300' : ''}`}>
         {view !== 'shift-detail' && <DesktopNav currentView={view} setView={setView} />}
 
         <div className="p-6 animate-fade-in"> 
@@ -260,7 +260,7 @@ export default function App() {
         </div>
         {view !== 'shift-detail' && (
           <footer className="px-6 pb-24 lg:pb-6 text-center">
-            <p className="text-[10px] text-indigo-400 font-semibold tracking-wide">Power by ACL-Smart Software</p>
+            <p className="text-[10px] text-slate-500 font-semibold tracking-wide">Power by ACL-Smart Software</p>
           </footer>
         )}
         {view !== 'shift-detail' && <MobileNav currentView={view} setView={setView} />}

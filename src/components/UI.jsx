@@ -8,8 +8,8 @@ export const Card = ({ children, className = "", onClick, noPadding = false }) =
   <div 
     onClick={onClick}
     className={cn(
-      "bg-gradient-to-br from-white via-indigo-50/50 to-purple-50/45 backdrop-blur-sm rounded-2xl border border-indigo-200/90 shadow-sm transition-all duration-200 overflow-hidden",
-      onClick && "cursor-pointer hover:shadow-md hover:border-indigo-200",
+      "bg-gradient-to-br from-slate-100 via-slate-100 to-slate-200/60 backdrop-blur-sm rounded-2xl border border-slate-300 shadow-sm transition-all duration-200 overflow-hidden",
+      onClick && "cursor-pointer hover:shadow-md hover:border-slate-400",
       !noPadding && "p-5 sm:p-6",
       className
     )}
@@ -25,8 +25,8 @@ export const Button = ({ children, onClick, variant = 'primary', className = "",
     primary: "bg-gradient-to-r from-indigo-600 to-purple-700 text-white hover:from-indigo-700 hover:to-purple-800 focus:ring-indigo-400 border border-transparent",
     success: "bg-emerald-600 text-white hover:bg-emerald-700 focus:ring-emerald-500 border border-transparent",
     danger: "bg-rose-600 text-white hover:bg-rose-700 focus:ring-rose-500 border border-transparent",
-    ghost: "text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 focus:ring-indigo-300",
-    outline: "bg-white text-slate-700 border border-indigo-200 hover:bg-indigo-50 hover:border-indigo-300 focus:ring-indigo-300"
+    ghost: "text-slate-700 hover:bg-slate-100 hover:text-slate-900 focus:ring-slate-300",
+    outline: "bg-slate-100 text-slate-800 border border-slate-300 hover:bg-slate-200 hover:border-slate-400 focus:ring-slate-300"
   };
 
   const sizes = {
@@ -59,8 +59,8 @@ export const Input = ({ value, onChange, onKeyDown, placeholder, type = "text", 
       placeholder={placeholder}
       autoFocus={autoFocus}
       className={cn(
-        "block w-full h-12 appearance-none bg-white border border-indigo-200 rounded-xl py-3 text-slate-900 placeholder:text-slate-400 outline-none transition-all duration-200",
-        "focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/15",
+        "block w-full h-12 appearance-none bg-slate-100 border border-slate-300 rounded-xl py-3 text-slate-900 placeholder:text-slate-500 outline-none transition-all duration-200",
+        "focus:border-slate-500 focus:ring-4 focus:ring-slate-900/10",
         Icon ? 'pl-11 pr-4' : 'px-4',
         className
       )}
@@ -93,7 +93,7 @@ export const ConfirmModal = ({ isOpen, message, onConfirm, onCancel }) => {
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 bg-slate-900/55 backdrop-blur-[2px] z-[80] flex items-center justify-center p-4 animate-fade-in">
-      <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-xl scale-100">
+      <div className="bg-slate-100 rounded-3xl p-8 max-w-sm w-full shadow-xl scale-100 border border-slate-300">
         <div className="w-14 h-14 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-5 ring-4 ring-rose-50">
           <Trash2 size={26} className="text-rose-700" />
         </div>
@@ -136,7 +136,7 @@ export const AutoSaveTextarea = ({ value, onSave, disabled, placeholder }) => {
         disabled={disabled}
         value={localValue}
         onChange={handleChange}
-        className="w-full p-4 bg-white border border-indigo-200 rounded-2xl text-base min-h-[140px] focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/15 outline-none transition-all text-slate-900 placeholder:text-slate-400 resize-none leading-relaxed"
+        className="w-full p-4 bg-slate-100 border border-slate-300 rounded-2xl text-base min-h-[140px] focus:border-slate-500 focus:ring-4 focus:ring-slate-900/10 outline-none transition-all text-slate-900 placeholder:text-slate-500 resize-none leading-relaxed"
         placeholder={placeholder}
       />
       {isSaving && (
