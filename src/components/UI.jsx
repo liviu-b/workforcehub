@@ -10,7 +10,7 @@ export const Card = ({ children, className = "", onClick, noPadding = false }) =
     className={cn(
       "bg-gradient-to-br from-slate-100 via-slate-100 to-slate-200/60 backdrop-blur-sm rounded-2xl border border-slate-300 shadow-sm transition-all duration-200 overflow-hidden",
       onClick && "cursor-pointer hover:shadow-md hover:border-slate-400",
-      !noPadding && "p-5 sm:p-6",
+      !noPadding && "p-3.5 sm:p-4",
       className
     )}
   >

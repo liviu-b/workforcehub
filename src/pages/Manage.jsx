@@ -238,7 +238,7 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
   };
 
   return (
-    <div className="flex flex-col gap-6 pb-24 pt-2">
+    <div className="flex flex-col gap-4 pb-24 pt-2">
       {/* Header */}
       <div className="flex justify-between items-start px-1">
         <div>
@@ -248,7 +248,7 @@ export default function ManageView({ employees, jobs, materials, setEmployees, s
             <Calendar size={14} />
              Administrare
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
             Setări <span className="text-indigo-700">Proiect</span>
           </h1>
         </div>

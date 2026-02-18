@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { CalendarDays, ChevronLeft, ChevronRight, Plus, Clock } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, Plus, Clock, Copy } from 'lucide-react';
 import { Card, Button } from '../components/UI';
+import { apiClient } from '../lib/apiClient';
+import { APP_ID } from '../constants';
 
 const startOfWeek = (date) => {
   const d = new Date(date);
@@ -22,8 +24,17 @@ const toIsoDate = (date) => {
   return d.toISOString();
 };
 
-export default function CalendarView({ shifts, jobs, handleCreateShift, setActiveShiftId, setView }) {
+const moveShiftToDate = (shiftDate, targetDate) => {
+  const source = new Date(shiftDate);
+  const target = new Date(targetDate);
+  target.setHours(source.getHours(), source.getMinutes(), source.getSeconds(), source.getMilliseconds());
+  return target.toISOString();
+};
+
+export default function CalendarView({ shifts, jobs, handleCreateShift, updateShiftLocally, fetchData, showToast, setActiveShiftId, setView }) {
   const [weekStart, setWeekStart] = useState(startOfWeek(new Date()));
+  const [dragOverKey, setDragOverKey] = useState('');
+  const [isDuplicating, setIsDuplicating] = useState(false);
 
   const days = useMemo(() => {
     return Array.from({ length: 7 }).map((_, index) => addDays(weekStart, index));
@@ -40,19 +51,81 @@ export default function CalendarView({ shifts, jobs, handleCreateShift, setActiv
     return grouped;
   }, [shifts]);
 
+  const handleDropShift = async (event, day) => {
+    event.preventDefault();
+    const shiftId = event.dataTransfer.getData('text/shift-id');
+    setDragOverKey('');
+    if (!shiftId) return;
+
+    const shift = shifts.find((item) => item.id === shiftId);
+    if (!shift) return;
+
+    const newDate = moveShiftToDate(shift.date, day);
+    updateShiftLocally(shiftId, { date: newDate });
+    try {
+      await apiClient.updateRecord('shifts', shiftId, { date: newDate });
+      showToast('Raport mutat în calendar');
+    } catch (error) {
+      console.error(error);
+      showToast('Eroare la mutarea raportului', 'error');
+      fetchData();
+    }
+  };
+
+  const duplicateShiftForWeek = async (shift) => {
+    if (!shift?.jobId) return;
+    const sourceDate = new Date(shift.date);
+    const sourceDay = sourceDate.toLocaleDateString('ro-RO');
+
+    const targetDays = days
+      .filter((day) => day.toLocaleDateString('ro-RO') !== sourceDay)
+      .map((day) => day.toISOString());
+
+    if (targetDays.length === 0) return;
+
+    setIsDuplicating(true);
+    try {
+      await Promise.all(targetDays.map((dateIso) => apiClient.createRecord('shifts', {
+        app_id: APP_ID,
+        jobId: shift.jobId,
+        jobTitle: shift.jobTitle,
+        date: dateIso,
+        status: 'open',
+        progress: 0,
+        assignedEmployeeIds: [],
+        employeeHours: {},
+        materialUsage: [],
+        taskChecklist: [],
+        notes: '',
+        submittedAt: null,
+        submittedBy: null,
+        submittedByName: null,
+        createdAt: new Date().toISOString(),
+        createdBy: shift.createdBy || null,
+      })));
+      await fetchData();
+      showToast('Raport duplicat pe săptămână');
+    } catch (error) {
+      console.error(error);
+      showToast('Eroare la duplicare', 'error');
+    } finally {
+      setIsDuplicating(false);
+    }
+  };
+
   return (
-    <div className="space-y-6 pb-24 pt-2">
+    <div className="space-y-4 pb-24 pt-2">
       <div className="flex justify-between items-start px-1">
         <div>
           <div className="flex items-center gap-2 text-indigo-600 text-xs font-semibold uppercase tracking-wider mb-1">
             <CalendarDays size={14} /> Planificare săptămânală
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Calendar <span className="text-indigo-700">Lucrări</span></h1>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Calendar <span className="text-indigo-700">Lucrări</span></h1>
         </div>
       </div>
 
       <Card>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-3">
           <Button variant="outline" size="icon" onClick={() => setWeekStart(addDays(weekStart, -7))}><ChevronLeft size={18} /></Button>
           <p className="font-semibold text-slate-800 text-sm text-center">
             {days[0].toLocaleDateString('ro-RO')} - {days[6].toLocaleDateString('ro-RO')}
@@ -60,29 +133,62 @@ export default function CalendarView({ shifts, jobs, handleCreateShift, setActiv
           <Button variant="outline" size="icon" onClick={() => setWeekStart(addDays(weekStart, 7))}><ChevronRight size={18} /></Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-7 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-7 gap-2">
           {days.map((day) => {
             const key = day.toLocaleDateString('ro-RO');
             const dayShifts = shiftsByDay[key] || [];
             const isToday = new Date().toLocaleDateString('ro-RO') === key;
 
             return (
-              <div key={key} className={`border rounded-xl p-3 min-h-[220px] ${isToday ? 'border-indigo-500 bg-gradient-to-b from-indigo-50 to-purple-50' : 'border-indigo-100 bg-white/90'}`}>
-                <div className="mb-3">
+              <div
+                key={key}
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  setDragOverKey(key);
+                }}
+                onDragLeave={() => setDragOverKey('')}
+                onDrop={(event) => handleDropShift(event, day)}
+                className={`border rounded-xl p-2 min-h-[170px] ${isToday ? 'border-indigo-500 bg-gradient-to-b from-indigo-50 to-purple-50' : 'border-indigo-100 bg-white/90'} ${dragOverKey === key ? 'ring-2 ring-indigo-300' : ''}`}
+              >
+                <div className="mb-2">
                   <p className="text-xs uppercase tracking-wider text-indigo-600 font-semibold">{day.toLocaleDateString('ro-RO', { weekday: 'short' })}</p>
                   <p className="text-sm font-semibold text-slate-900">{day.toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit' })}</p>
                 </div>
 
-                <div className="space-y-2 mb-3">
+                <div className="space-y-1.5 mb-2.5">
                   {dayShifts.map((shift) => (
-                    <button
+                    <div
                       key={shift.id}
-                      onClick={() => { setActiveShiftId(shift.id); setView('shift-detail'); }}
-                      className="w-full text-left text-xs border border-indigo-100 rounded-lg p-2 hover:border-indigo-300 bg-white"
+                      draggable
+                      onDragStart={(event) => {
+                        event.dataTransfer.setData('text/shift-id', shift.id);
+                        event.dataTransfer.effectAllowed = 'move';
+                      }}
+                      className="w-full text-left text-xs border border-indigo-100 rounded-lg p-1.5 hover:border-indigo-300 bg-white"
                     >
-                      <p className="font-semibold text-slate-800 truncate">{shift.jobTitle}</p>
+                      <div className="flex items-start justify-between gap-1">
+                        <button
+                          type="button"
+                          onClick={() => { setActiveShiftId(shift.id); setView('shift-detail'); }}
+                          className="font-semibold text-slate-800 truncate text-left flex-1"
+                        >
+                          {shift.jobTitle}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            duplicateShiftForWeek(shift);
+                          }}
+                          className="text-indigo-600 hover:text-indigo-800"
+                          title="Duplică pe săptămână"
+                          disabled={isDuplicating}
+                        >
+                          <Copy size={12} />
+                        </button>
+                      </div>
                       <p className="text-indigo-600 mt-1 flex items-center gap-1"><Clock size={12} /> {shift.progress || 0}%</p>
-                    </button>
+                    </div>
                   ))}
                   {dayShifts.length === 0 && <p className="text-xs text-slate-400">Fără lucrări planificate.</p>}
                 </div>

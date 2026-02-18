@@ -70,6 +70,9 @@ model Shift {
   materialUsage       Json
   taskChecklist       Json?
   notes               String
+  submittedAt         String?
+  submittedBy         String?
+  submittedByName     String?
   approvedAt          String?
   approvedBy          String?
   approvedByName      String?

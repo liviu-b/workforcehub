@@ -166,6 +166,9 @@ export default function App() {
         materialUsage: [],
         taskChecklist: [],
         notes: '',
+        submittedAt: null,
+        submittedBy: null,
+        submittedByName: null,
         createdAt: new Date().toISOString(),
         createdBy: user.id,
       };
@@ -213,6 +216,9 @@ export default function App() {
                 shifts={shifts}
                 jobs={jobs}
                 handleCreateShift={handleCreateShift}
+                updateShiftLocally={updateShiftLocally}
+                fetchData={fetchData}
+                showToast={showToast}
                 setActiveShiftId={setActiveShiftId}
                 setView={setView}
               />
@@ -225,6 +231,7 @@ export default function App() {
                 shifts={shifts}
                 employees={employees}
                 updateShiftLocally={updateShiftLocally}
+                fetchData={fetchData}
                 showToast={showToast}
               />
             </div>

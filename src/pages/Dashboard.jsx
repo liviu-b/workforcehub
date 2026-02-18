@@ -24,7 +24,7 @@ export default function Dashboard({ shifts, user, userName, setUserName, setActi
   };
 
   return (
-    <div className="space-y-6 pb-24 pt-2">
+    <div className="space-y-4 pb-24 pt-2">
       <div className="flex justify-between items-start px-1">
         <div>
           <div className="flex items-center gap-2 text-indigo-600 text-xs font-semibold uppercase tracking-wide mb-1">
@@ -45,7 +45,7 @@ export default function Dashboard({ shifts, user, userName, setUserName, setActi
               </div>
             ) : (
               <div className="group flex items-center gap-2 cursor-pointer" onClick={() => { setTempName(userName); setIsEditingName(true); }}>
-                 <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Salut, <span className="text-indigo-700">{userName}</span></h1>
+                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Salut, <span className="text-indigo-700">{userName}</span></h1>
                  <Edit2 size={16} className="text-indigo-400 opacity-0 group-hover:opacity-100 transition-all" />
               </div>
             )}
@@ -58,21 +58,21 @@ export default function Dashboard({ shifts, user, userName, setUserName, setActi
 
       <div className="grid grid-cols-2 gap-4">
         <Card noPadding>
-          <div className="p-5">
-            <div className="inline-flex p-2 rounded-lg bg-indigo-100 text-indigo-700 mb-3">
-              <Briefcase size={16} />
+          <div className="p-3.5">
+            <div className="inline-flex p-1.5 rounded-lg bg-indigo-100 text-indigo-700 mb-2">
+              <Briefcase size={14} />
             </div>
             <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">Lucrări Azi</p>
-            <p className="text-3xl font-bold text-slate-900">{todaysShifts.length}</p>
+            <p className="text-2xl font-bold text-slate-900">{todaysShifts.length}</p>
           </div>
         </Card>
         <Card noPadding>
-          <div className="p-5">
-            <div className="inline-flex p-2 rounded-lg bg-purple-100 text-purple-700 mb-3">
-              <Users size={16} />
+          <div className="p-3.5">
+            <div className="inline-flex p-1.5 rounded-lg bg-purple-100 text-purple-700 mb-2">
+              <Users size={14} />
             </div>
             <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">Muncitori</p>
-            <p className="text-3xl font-bold text-slate-900">
+            <p className="text-2xl font-bold text-slate-900">
               {todaysShifts.reduce((acc, s) => acc + (s.assignedEmployeeIds?.length || 0), 0)}
             </p>
           </div>
@@ -95,16 +95,17 @@ export default function Dashboard({ shifts, user, userName, setUserName, setActi
         ) : (
           <div className="space-y-3">
             {todaysShifts.map(s => (
-              <Card key={s.id} onClick={() => { setActiveShiftId(s.id); setView('shift-detail'); }} className="group flex items-center gap-4">
+              <Card key={s.id} onClick={() => { setActiveShiftId(s.id); setView('shift-detail'); }} className="group flex items-center gap-3">
                  <div className={`h-12 w-12 rounded-xl flex items-center justify-center shrink-0 ${
-                   s.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-indigo-100 text-indigo-700'
+                   s.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : s.status === 'submitted' ? 'bg-amber-100 text-amber-700' : 'bg-indigo-100 text-indigo-700'
                  }`}>
-                    {s.status === 'approved' ? <CheckCircle size={20} /> : <Clock size={20} />}
+                    {s.status === 'approved' ? <CheckCircle size={20} /> : <Clock size={18} />}
                  </div>
                  <div className="flex-1 min-w-0">
-                   <h4 className="font-semibold text-slate-900 text-base truncate">{s.jobTitle}</h4>
+                   <h4 className="font-semibold text-slate-900 text-sm truncate">{s.jobTitle}</h4>
                    <div className="flex items-center gap-2 text-xs font-medium mt-1">
                       <span className="text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">{s.assignedEmployeeIds?.length || 0} oameni</span>
+                      {s.status === 'submitted' && <span className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-100">În aprobare</span>}
                       {s.progress > 0 && <span className="text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-100">{s.progress}%</span>}
                    </div>
                  </div>
@@ -128,11 +129,11 @@ export default function Dashboard({ shifts, user, userName, setUserName, setActi
              <button
                key={job.id}
                onClick={() => handleCreateShift(job.id)}
-               className="flex items-center justify-between w-full p-4 pl-5 bg-white border border-indigo-200 hover:border-indigo-400 rounded-2xl transition-all group text-left"
+               className="flex items-center justify-between w-full p-3 pl-4 bg-white border border-indigo-200 hover:border-indigo-400 rounded-xl transition-all group text-left"
              >
                <span className="font-semibold text-slate-800 group-hover:text-indigo-700 transition-colors">{job.title}</span>
-               <div className="bg-gradient-to-r from-indigo-600 to-purple-700 h-8 w-8 flex items-center justify-center rounded-full transition-all shadow-sm">
-                 <Plus size={16} className="text-white" strokeWidth={3} />
+               <div className="bg-gradient-to-r from-indigo-600 to-purple-700 h-7 w-7 flex items-center justify-center rounded-full transition-all shadow-sm">
+                 <Plus size={14} className="text-white" strokeWidth={3} />
                </div>
              </button>
            ))}

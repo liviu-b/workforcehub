@@ -15,7 +15,9 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
 
   const [newTaskText, setNewTaskText] = React.useState('');
 
+  const isSubmitted = shift.status === 'submitted';
   const isApproved = shift.status === 'approved';
+  const isReadOnly = isSubmitted || isApproved;
   const currentJob = jobs.find((job) => job.id === shift.jobId);
 
   const getShiftCosts = (targetShift) => {
@@ -140,7 +142,32 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
   };
 
   // --- FUNCȚIA DE APROBARE + NOTIFICARE EMAIL ---
+  const submitShiftForApproval = async () => {
+    const nowIso = new Date().toISOString();
+    const partial = {
+      status: 'submitted',
+      submittedAt: nowIso,
+      submittedBy: user.id,
+      submittedByName: userName,
+    };
+
+    updateShiftLocally(activeShiftId, partial);
+    try {
+      await apiClient.updateRecord('shifts', activeShiftId, partial);
+      showToast('Raport trimis spre aprobare');
+    } catch (error) {
+      console.error(error);
+      showToast('Eroare la trimitere', 'error');
+      fetchData();
+    }
+  };
+
   const approveShift = async () => {
+    if (!isSubmitted) {
+      showToast('Raportul trebuie trimis mai întâi spre aprobare', 'error');
+      return;
+    }
+
     const nowIso = new Date().toISOString();
     
     // 1. Actualizăm local starea (UI Optimistic)
@@ -148,7 +175,7 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
       status: 'approved',
       approvedAt: nowIso,
       approvedBy: user.id,
-      approvedByName: userName
+      approvedByName: userName,
     };
 
     // Actualizăm UI-ul imediat
@@ -209,28 +236,38 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
           </div>
         )}
 
-        <Card className={isApproved ? 'opacity-60 pointer-events-none' : ''}>
-          <div className="flex justify-between items-center mb-4">
+        {isSubmitted && !isApproved && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3.5 flex items-start gap-3">
+            <CheckCircle className="text-amber-700 mt-0.5" size={18} />
+            <div>
+              <h4 className="font-semibold text-amber-900 text-sm">În așteptare aprobare finală</h4>
+              <p className="text-amber-700 text-xs mt-0.5">Trimis de {shift.submittedByName || 'Utilizator'} la {shift.submittedAt ? new Date(shift.submittedAt).toLocaleString('ro-RO') : '-'}</p>
+            </div>
+          </div>
+        )}
+
+        <Card className={isReadOnly ? 'opacity-60 pointer-events-none' : ''}>
+          <div className="flex justify-between items-center mb-3">
              <h3 className="font-semibold text-slate-900 flex items-center gap-2 text-sm">
                <div className="bg-indigo-100 p-1.5 rounded-lg text-indigo-700"><TrendingUp size={16}/></div> Progres
              </h3>
              <span className="text-2xl font-bold text-slate-900">{shift.progress || 0}%</span>
           </div>
           <input 
-            type="range" min="0" max="100" step="5" disabled={isApproved}
+            type="range" min="0" max="100" step="5" disabled={isReadOnly}
             value={shift.progress || 0}
             onChange={(e) => updateShift('progress', Number(e.target.value))}
             className="w-full h-3 bg-indigo-100 rounded-lg appearance-none cursor-pointer accent-indigo-600 transition-all"
           />
         </Card>
 
-        <Card className={isApproved ? 'opacity-60 pointer-events-none' : ''}>
-          <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2 text-sm">
+        <Card className={isReadOnly ? 'opacity-60 pointer-events-none' : ''}>
+          <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2 text-sm">
             <div className="bg-indigo-100 p-1.5 rounded-lg text-indigo-700"><Users size={16}/></div> Echipă
           </h3>
           
-          {!isApproved && (
-            <div className="flex flex-wrap gap-2 mb-6 p-3 bg-indigo-50 rounded-xl border border-indigo-100">
+          {!isReadOnly && (
+            <div className="flex flex-wrap gap-2 mb-4 p-2.5 bg-indigo-50 rounded-xl border border-indigo-100">
               {employees.map(emp => {
                 const isSelected = shift.assignedEmployeeIds?.includes(emp.id);
                 return (
@@ -251,13 +288,13 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
             {shift.assignedEmployeeIds?.map(id => {
                const emp = employees.find(e => e.id === id);
                return (
-                 <div key={id} className="flex justify-between items-center p-3 bg-white border border-slate-100 rounded-xl shadow-sm">
+                 <div key={id} className="flex justify-between items-center p-2.5 bg-white border border-slate-100 rounded-xl shadow-sm">
                    <span className="font-semibold text-slate-700 text-sm pl-2 border-l-2 border-indigo-500">{emp?.name}</span>
                    <div className="flex items-center gap-2 bg-indigo-50 rounded-lg px-2 py-1">
                      <input 
                        type="number" min="0" max="24"
                        value={shift.employeeHours?.[id] ?? 8}
-                       disabled={isApproved}
+                       disabled={isReadOnly}
                        onChange={(e) => updateShift('employeeHours', { ...shift.employeeHours, [id]: e.target.value })}
                        className="w-8 text-center bg-transparent text-sm font-bold outline-none text-slate-900"
                      />
@@ -270,13 +307,13 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
           </div>
         </Card>
 
-        <Card className={isApproved ? 'opacity-60 pointer-events-none' : ''}>
-           <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2 text-sm">
+        <Card className={isReadOnly ? 'opacity-60 pointer-events-none' : ''}>
+           <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2 text-sm">
             <div className="bg-indigo-100 p-1.5 rounded-lg text-indigo-700"><Package size={16}/></div> Materiale
           </h3>
           
-          {!isApproved && (
-            <div className="flex gap-2 mb-5">
+          {!isReadOnly && (
+            <div className="flex gap-2 mb-4">
               <div className="relative flex-1">
                 <select id="matSelect" className="w-full appearance-none bg-indigo-50 border border-indigo-100 text-slate-700 text-sm rounded-xl px-4 py-3 outline-none focus:border-indigo-400 transition-all">
                   <option value="">Alege material...</option>
@@ -301,7 +338,7 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
                      <span className="font-medium text-slate-700">{mat?.name}</span>
                      <div className="flex items-center gap-3">
                      <span className="font-bold text-indigo-700 bg-indigo-100 px-2 py-1 rounded-md">{u.quantity} {mat?.unit}</span>
-                        {!isApproved && <button onClick={() => updateShift('materialUsage', shift.materialUsage.filter((_, i) => i !== idx))} className="text-slate-300 hover:text-rose-500"><X size={16}/></button>}
+                        {!isReadOnly && <button onClick={() => updateShift('materialUsage', shift.materialUsage.filter((_, i) => i !== idx))} className="text-slate-300 hover:text-rose-500"><X size={16}/></button>}
                      </div>
                   </div>
                 )
@@ -310,13 +347,13 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
           </div>
         </Card>
 
-        <Card className={isApproved ? 'opacity-60 pointer-events-none' : ''}>
-          <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2 text-sm">
+        <Card className={isReadOnly ? 'opacity-60 pointer-events-none' : ''}>
+          <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2 text-sm">
             <div className="bg-indigo-100 p-1.5 rounded-lg text-indigo-700"><CheckCircle size={16}/></div> Checklist Lucrări
           </h3>
 
-          {!isApproved && (
-            <div className="flex gap-2 mb-4">
+          {!isReadOnly && (
+            <div className="flex gap-2 mb-3">
               <input
                 value={newTaskText}
                 onChange={(e) => setNewTaskText(e.target.value)}
@@ -338,7 +375,7 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
                   <CheckCircle size={12} />
                 </button>
                 <p className={`flex-1 text-sm ${task.done ? 'text-slate-400 line-through' : 'text-slate-700'}`}>{task.label}</p>
-                {!isApproved && (
+                {!isReadOnly && (
                   <button onClick={() => removeTask(task.id)} className="text-slate-400 hover:text-rose-600">
                     <X size={16} />
                   </button>
@@ -351,10 +388,10 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
           </div>
         </Card>
 
-        <Card className={isApproved ? 'opacity-60 pointer-events-none' : ''}>
+        <Card className={isReadOnly ? 'opacity-60 pointer-events-none' : ''}>
           <h3 className="font-semibold text-slate-900 mb-2 text-sm">Note & Observații</h3>
           <AutoSaveTextarea 
-            disabled={isApproved}
+            disabled={isReadOnly}
             value={shift.notes}
             onSave={(val) => updateShift('notes', val)}
             placeholder="Scrie aici observații, probleme întâmpinate sau starea vremii..."
@@ -388,10 +425,18 @@ export default function ShiftDetailView({ shift, activeShiftId, setView, request
         </Card>
       </div>
 
-      {!isApproved && (
+      {shift.status === 'open' && (
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 z-30 flex justify-center">
+          <Button variant="outline" size="lg" className="w-full max-w-md" onClick={submitShiftForApproval}>
+            <CheckCircle size={20} /> Trimite spre aprobare
+          </Button>
+        </div>
+      )}
+
+      {shift.status === 'submitted' && (
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 z-30 flex justify-center">
           <Button variant="success" size="lg" className="w-full max-w-md" onClick={approveShift}>
-            <CheckCircle size={20} /> Finalizează Raportul
+            <CheckCircle size={20} /> Aprobă Raportul
           </Button>
         </div>
       )}
